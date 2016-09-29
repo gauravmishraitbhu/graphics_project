@@ -8,6 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		F443C8DF1D9B9D3900DCF6EC /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F443C8DE1D9B9D3900DCF6EC /* main.cpp */; };
+		F443C8E81D9BA06400DCF6EC /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F443C8E61D9BA06400DCF6EC /* GLUT.framework */; };
+		F443C8E91D9BA06400DCF6EC /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F443C8E71D9BA06400DCF6EC /* OpenGL.framework */; };
+		F443C8EC1D9C293400DCF6EC /* DrawableObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F443C8EA1D9C293400DCF6EC /* DrawableObject.cpp */; };
+		F443C8EF1D9C2AC800DCF6EC /* Line.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F443C8ED1D9C2AC800DCF6EC /* Line.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -25,6 +29,12 @@
 /* Begin PBXFileReference section */
 		F443C8DB1D9B9D3900DCF6EC /* Project */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Project; sourceTree = BUILT_PRODUCTS_DIR; };
 		F443C8DE1D9B9D3900DCF6EC /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		F443C8E61D9BA06400DCF6EC /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = System/Library/Frameworks/GLUT.framework; sourceTree = SDKROOT; };
+		F443C8E71D9BA06400DCF6EC /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
+		F443C8EA1D9C293400DCF6EC /* DrawableObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DrawableObject.cpp; sourceTree = "<group>"; };
+		F443C8EB1D9C293400DCF6EC /* DrawableObject.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = DrawableObject.hpp; sourceTree = "<group>"; };
+		F443C8ED1D9C2AC800DCF6EC /* Line.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Line.cpp; sourceTree = "<group>"; };
+		F443C8EE1D9C2AC800DCF6EC /* Line.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Line.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -32,6 +42,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F443C8E81D9BA06400DCF6EC /* GLUT.framework in Frameworks */,
+				F443C8E91D9BA06400DCF6EC /* OpenGL.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -43,6 +55,7 @@
 			children = (
 				F443C8DD1D9B9D3900DCF6EC /* Project */,
 				F443C8DC1D9B9D3900DCF6EC /* Products */,
+				F443C8E51D9BA06400DCF6EC /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -58,8 +71,21 @@
 			isa = PBXGroup;
 			children = (
 				F443C8DE1D9B9D3900DCF6EC /* main.cpp */,
+				F443C8EA1D9C293400DCF6EC /* DrawableObject.cpp */,
+				F443C8EB1D9C293400DCF6EC /* DrawableObject.hpp */,
+				F443C8ED1D9C2AC800DCF6EC /* Line.cpp */,
+				F443C8EE1D9C2AC800DCF6EC /* Line.hpp */,
 			);
 			path = Project;
+			sourceTree = "<group>";
+		};
+		F443C8E51D9BA06400DCF6EC /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				F443C8E61D9BA06400DCF6EC /* GLUT.framework */,
+				F443C8E71D9BA06400DCF6EC /* OpenGL.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -119,6 +145,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F443C8EF1D9C2AC800DCF6EC /* Line.cpp in Sources */,
+				F443C8EC1D9C293400DCF6EC /* DrawableObject.cpp in Sources */,
 				F443C8DF1D9B9D3900DCF6EC /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -216,6 +244,7 @@
 		F443C8E31D9B9D3900DCF6EC /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -223,6 +252,7 @@
 		F443C8E41D9B9D3900DCF6EC /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
