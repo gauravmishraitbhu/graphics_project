@@ -10,8 +10,12 @@
 #include "DrawableObject.hpp"
 #include <GLUT/GLUT.h>
 #include <iostream>
+#include <math.h>
+#include "Utils.hpp"
 using namespace std;
 
+
+#define PI 3.14159265
 
 
 void Line :: draw(){
@@ -28,7 +32,7 @@ void Line :: draw(){
     glGetDoublev( GL_PROJECTION_MATRIX, projection ); //get the projection matrix info
     glGetIntegerv( GL_VIEWPORT, viewport ); //get the viewport info
     
-    cout << "startX and startY-->" << _startX << ", "<< _startY << endl;
+//    cout << "startX and startY-->" << _startX << ", "<< _startY << endl;
     
     GLfloat winStartX = (float)_startX;
     GLfloat winStartY = (float)viewport[3] - (float)_startY;
@@ -41,8 +45,8 @@ void Line :: draw(){
     gluUnProject( winStartX, winStartY, winZ, modelview, projection, viewport, &worldStartX, &worldStartY, &worldStartZ);
     gluUnProject( winEndX, winEndY, winZ, modelview, projection, viewport, &worldEndX, &worldEndY, &worldEndZ);
     
-    cout << "worldStX and worldStY-->" << worldStartX << ", "<<worldStartY << endl;
-    cout << "worldENdX and worldENdY-->" << worldEndX << ", "<<worldEndY << endl;
+//    cout << "worldStX and worldStY-->" << worldStartX << ", "<<worldStartY << endl;
+//    cout << "worldENdX and worldENdY-->" << worldEndX << ", "<<worldEndY << endl;
     
     glColor3f (1.0, 0.0, 0.0); // Set line segment color to black.
     glBegin (GL_LINES);
@@ -55,3 +59,31 @@ void Line::updateEndPoints(int newEndX , int newEndY){
     this->_endX = newEndX;
     this->_endY = newEndY;
 }
+
+float Line::getLength(){
+    //sqrt   (x2 + y2);
+    return sqrt( pow( _startX - _endX , 2 ) + pow( _startY - _endY , 2) );
+}
+
+float Line::getAngle(){
+    float radians = atan( (float)(_endY - _startY)/(_endX - _startX) );
+    return (radians * 180) / PI;
+}
+
+int Line::getObjectType(){
+    return OBJECT_TYPE_LINE;
+}
+
+void Line::assignParallelClass(int classNum){
+    _classNum = classNum;
+}
+
+
+void Line::assignColors(float r , float g , float b){
+    _colorR = r;
+    _colorG = g;
+    _colorB = b;
+}
+
+
+

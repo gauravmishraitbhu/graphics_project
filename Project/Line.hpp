@@ -18,6 +18,8 @@ private:
     /* start and end coordinates of Line segment */
     int _startX , _startY;
     int _endX , _endY;
+    int _classNum ;
+    float _colorR , _colorG , _colorB;
     
 public:
     Line(){
@@ -43,7 +45,11 @@ public:
     
     void draw();
     void updateEndPoints(int newEndX , int newEndY);
-
+    float getLength();
+    float getAngle();
+    int getObjectType();
+    void assignParallelClass(int classNum);
+    void assignColors(float r , float g , float b);
     
 };
 

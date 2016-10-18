@@ -10,7 +10,9 @@
 #include <GLUT/GLUT.h>
 #include "DrawableObject.hpp"
 #include "Line.hpp"
+#include "Button.hpp"
 #include <vector>
+#include "Utils.hpp"
 using namespace std;
 
 
@@ -21,7 +23,9 @@ const int WINDOW_WIDTH = 640;
 const int UI_MODE_LINE = 0;
 const int UI_MODE_FREEHAND = 1;
 
+
 vector< DrawableObject* > drawableObjects;
+vector <Button * > buttons;
 
 Line *currentLine;
 
@@ -72,6 +76,10 @@ void draw2D()
     
     if(currentLine != NULL){
         currentLine->draw();
+    }
+    
+    for (Button *btn : buttons){
+        btn->draw();
     }
     
     glFlush ( ); // Process all OpenGL routines as quickly as possible.
@@ -144,7 +152,6 @@ void draw (void)
  */
 void updateCurrentLine(int x , int y){
     if(currentLine){
-        cout << "updating a new Line Object"<<endl;
         currentLine->updateEndPoints( x , y );
     }
 }
@@ -165,17 +172,145 @@ void startLineDraw(int x , int y){
  */
 void commitCurrentLine(){
     
-    drawableObjects.push_back(currentLine);
-    currentLine = NULL;
+    if(currentLine != NULL){
+        
+        if(currentLine->getLength() > 5){
+            drawableObjects.push_back(currentLine);
+        }else{
+            cout << "ignoring a line which was less than 5 " << endl;
+        }
+        
+        currentLine = NULL;
+    }
+    
     
 }
+
+/********************************************************************************************************************************
+                                Button Related Methods
+ *******************************************************************************************************************************/
+
+void detectParallelLinesClass(){
+    cout << "detectParallelLinesClass" << endl;
+    vector<Line *> lines;
+    for (DrawableObject *obj : drawableObjects){
+        if(obj->getObjectType() == OBJECT_TYPE_LINE){
+            lines.push_back((Line *)obj);
+        }
+    }
+    assignParallelClass(lines);
+}
+
+void eraseAll(){
+    cout << "erasing all lines" << endl;
+    drawableObjects.clear();
+    currentLine = NULL;
+    glutPostRedisplay();
+}
+
+void initButtons(){
+    Button *detectParallelClassBtn  = new Button("Detect" , 10,10,80,30);
+    buttons.push_back(detectParallelClassBtn);
+    detectParallelClassBtn->addClickCallback(detectParallelLinesClass);
+    
+    Button *removeAllBtn = new Button("Erase All" , 100 , 10 , 80 , 30);
+    buttons.push_back(removeAllBtn);
+    removeAllBtn->addClickCallback(eraseAll);
+    
+}
+
+/*
+    Check on which button if any mouse btn was pressed.
+ */
+int checkButtonPress(int x , int y){
+    
+    int btnClicked = 0;
+    for (Button *btn : buttons){
+        if(btn->buttonClickTest(x, y)){
+            btn->setState(1);
+            btnClicked = 1;
+        }
+
+    }
+    
+    return btnClicked;
+    
+}
+
+void checkButtonRelease(int x,int y)
+{
+    
+    for(Button *btn : buttons){
+        /*
+         *	If the mouse button was pressed within the button area
+         *	as well as being released on the button.....
+         */
+        
+        if(btn->buttonClickTest(mouseController.xDragStart, mouseController.yDragStart)
+           && btn->buttonClickTest(x, y)){
+            
+            btn->clicked();
+        }
+        
+        btn->setState(0);
+        
+    }
+    glutPostRedisplay();
+}
+
+
+void buttonMousePassive(int x,int y)
+{
+    int needRedraw = 0;
+    
+    
+    for(Button *btn : buttons){
+        /*
+         *	if the mouse moved over the control
+         */
+        if( btn->buttonClickTest(x, y)){
+            /*
+             *	If the cursor has just arrived over the control, set the highlighted flag
+             *	and force a redraw. The screen will not be redrawn again until the mouse
+             *	is no longer over this control
+             */
+//            cout<<"*******************"<<endl;
+//            cout <<"inside a button"<<endl;
+            if( !btn->isHighlighted() ){
+                btn->setHighlighted(1);
+                needRedraw = 1;
+            }
+            
+        }else{
+            
+            /*
+             *	If the cursor is no longer over the control, then if the control
+             *	is highlighted (ie, the mouse has JUST moved off the control) then
+             *	we set the highlighting back to false, and force a redraw.
+             */
+            if( btn->isHighlighted() ){
+                btn->setHighlighted(0);
+                needRedraw = 1;
+            }
+        }
+    }
+    
+    if (needRedraw) {
+//        cout << "Redraw"<<endl;
+        glutPostRedisplay();
+    }
+    
+}
+
 
 /********************************************************************************************************************************
                                 Mouse Control Methods
  *******************************************************************************************************************************/
 
 
-
+/*
+    Will be called when user presses or releases a button.
+ */
 void mouseClicked(int button , int state , int x , int y){
     /*
      *	update the mouse position
@@ -198,12 +333,16 @@ void mouseClicked(int button , int state , int x , int y){
             case GLUT_LEFT_BUTTON:
                 mouseController.mousePressed = 1;
                 
-                /*
-                 * is current mode is line mode then user click will start a line
-                 */
-                if(UIMode == UI_MODE_LINE){
-                    startLineDraw(x, y);
+                
+                if( !checkButtonPress(x,y) ){
+                    /*
+                     * is current mode is line mode then user click will start a line
+                     */
+                    if(UIMode == UI_MODE_LINE){
+                        startLineDraw(x, y);
+                    }
                 }
+                
                 break;
             
         }
@@ -217,7 +356,7 @@ void mouseClicked(int button , int state , int x , int y){
         {
             case GLUT_LEFT_BUTTON:
                 mouseController.mousePressed = 0;
-                
+                checkButtonRelease(x,y);
                 // delete the current curve or line
                 if(UIMode == UI_MODE_LINE){
                     commitCurrentLine();
@@ -236,6 +375,10 @@ void mouseClicked(int button , int state , int x , int y){
 
 }
 
+
+/*
+ When user drags the mouse with button clicked
+ */
 void mouseMove(int x , int y){
     
     int dx = x - mouseController.x;
@@ -258,6 +401,27 @@ void mouseMove(int x , int y){
 }
 
 
+/*
+    When user moves mouse without holding down the button.
+ */
+void mousePassiveMotion(int x , int y){
+    /*
+     *	Calculate how much the mouse actually moved
+     */
+    int dx = x - mouseController.x;
+    int dy = y - mouseController.y;
+    
+    /*
+     *	update the mouse position
+     */
+    mouseController.x = x;
+    mouseController.y = y;
+    
+    /*
+     *	Check MyButton to see if we should highlight it cos the mouse is over it
+     */
+    buttonMousePassive(x,y);
+}
 
 
 
@@ -267,17 +431,13 @@ int main (int argc, char** argv)
     glutInitDisplayMode(GLUT_RGB|GLUT_DEPTH|GLUT_DOUBLE);
     glutInitWindowSize(WINDOW_WIDTH,WINDOW_HEIGHT);
     glutInitWindowPosition(200,100);
-    glutCreateWindow("03 - Mouse Motion");
-    
-//    DrawableObject *l1 = new Line( 0, 0, 50, 50 );
-//    DrawableObject *l2 = new Line( 10, 10, 100, 100 );
-//    drawableObjects.push_back(l1);
-//    drawableObjects.push_back(l2);
+    glutCreateWindow("3D Reconstruction");
+    initButtons();
     glutDisplayFunc(draw);
 //    glutReshapeFunc(Resize);
       glutMouseFunc(mouseClicked);
       glutMotionFunc(mouseMove);
-//    glutPassiveMotionFunc(MousePassiveMotion);
+      glutPassiveMotionFunc(mousePassiveMotion);
     
     init();
     

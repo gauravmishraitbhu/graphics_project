@@ -15,6 +15,7 @@ class DrawableObject {
     
 public:
     void virtual draw() = 0;
+    int virtual getObjectType() = 0;
 };
 
 #endif /* DrawableObject_hpp */
