@@ -198,7 +198,14 @@ void detectParallelLinesClass(){
             lines.push_back((Line *)obj);
         }
     }
+    fixSketch(lines);
+    
+    // make the edge vectors uniform
+    for(Line * line : lines ){
+        line->uniformifyVertices();
+    }
     assignParallelClass(lines);
+    glutPostRedisplay();
 }
 
 void eraseAll(){

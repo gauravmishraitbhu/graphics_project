@@ -47,12 +47,18 @@ void Line :: draw(){
     
 //    cout << "worldStX and worldStY-->" << worldStartX << ", "<<worldStartY << endl;
 //    cout << "worldENdX and worldENdY-->" << worldEndX << ", "<<worldEndY << endl;
-    
-    glColor3f (1.0, 0.0, 0.0); // Set line segment color to black.
+    glLineWidth(2);
+    glColor3f (_colorR, _colorG, _colorB); // Set line segment color to black.
     glBegin (GL_LINES);
     glVertex2i( worldStartX , worldStartY );
     glVertex2i( worldEndX, worldEndY );
     glEnd ( );
+    
+    // make a big dot to signify direction of vector
+    glPointSize(4);
+    glBegin(GL_POINTS);
+    glVertex2i(worldEndX , worldEndY);
+    glEnd();
 }
 
 void Line::updateEndPoints(int newEndX , int newEndY){
@@ -67,7 +73,12 @@ float Line::getLength(){
 
 float Line::getAngle(){
     float radians = atan( (float)(_endY - _startY)/(_endX - _startX) );
-    return (radians * 180) / PI;
+    float angle = (radians * 180) / PI;
+    if(angle > 85){
+        return -1 * angle;
+    }else{
+        return angle;
+    }
 }
 
 int Line::getObjectType(){
@@ -75,6 +86,7 @@ int Line::getObjectType(){
 }
 
 void Line::assignParallelClass(int classNum){
+    cout << "setting class to= " << classNum << endl;
     _classNum = classNum;
 }
 
@@ -85,5 +97,56 @@ void Line::assignColors(float r , float g , float b){
     _colorB = b;
 }
 
+
+void Line::findAndFixVertex(int x , int y){
+    // look at vertex1 ie startX and startY
+    if( getCartesianDistance(x , y , _startX , _startY) < 10){
+        
+        //since the vertex1 is too close to given point move it
+        // to that given point
+        _startX = x;
+        _startY = y;
+        _isVertex1Corrected = 1;
+    }
+    
+    //now look at vertex2
+    if(getCartesianDistance(x, y, _endX, _endY) < 10 ){
+        _endX = x;
+        _endY = y;
+        _isVertex2Corrected = 1;
+    }
+}
+
+
+void Line::uniformifyVertices(){
+    float angle = getAngle();
+    if(angle <= 45 && angle >= -45){
+        
+        // check if endX is greater than startX
+        // if not then swap
+        
+        if(_endX < _startX){
+            int temp = _endX;
+            _endX = _startX;
+            _startX = temp;
+            
+            temp = _endY;
+            _endY = _startY;
+            _startY = temp;
+        }
+    }else{
+        //check if endY is greater than startY
+        
+        if(_endY < _startY){
+            int temp = _endY;
+            _endY = _startY;
+            _startY = temp;
+            
+            temp = _endX;
+            _endX = _startX;
+            _startX = temp;
+        }
+    }
+}
 
 
