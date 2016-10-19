@@ -29,6 +29,8 @@ vector <Button * > buttons;
 
 Line *currentLine;
 
+int numParallelClasses = 0;
+
 // 0 -- line Mode , 1 -- free hand
 int UIMode = 0;
 
@@ -204,7 +206,7 @@ void detectParallelLinesClass(){
     for(Line * line : lines ){
         line->uniformifyVertices();
     }
-    assignParallelClass(lines);
+    numParallelClasses = assignParallelClass(lines);
     glutPostRedisplay();
 }
 
@@ -213,6 +215,18 @@ void eraseAll(){
     drawableObjects.clear();
     currentLine = NULL;
     glutPostRedisplay();
+}
+
+void solveSVD(){
+    vector<Line *> lines;
+    for (DrawableObject *obj : drawableObjects){
+        if(obj->getObjectType() == OBJECT_TYPE_LINE){
+            lines.push_back((Line *)obj);
+        }
+    }
+    
+    fixLineDirections(lines , numParallelClasses);
+    assignVertexIds(lines);
 }
 
 void initButtons(){
@@ -224,6 +238,9 @@ void initButtons(){
     buttons.push_back(removeAllBtn);
     removeAllBtn->addClickCallback(eraseAll);
     
+    Button *solveSVDBtn = new Button("Solve SVD" , 190 , 10 , 80 , 30);
+    buttons.push_back(solveSVDBtn);
+    solveSVDBtn->addClickCallback(solveSVD);
 }
 
 /*
@@ -430,7 +447,20 @@ void mousePassiveMotion(int x , int y){
     buttonMousePassive(x,y);
 }
 
-
+void addStartSketch(){
+    drawableObjects.push_back(new Line(147,166,147,320));
+    drawableObjects.push_back(new Line(147,320,309,320));
+    drawableObjects.push_back(new Line(310,167,309,320));
+    drawableObjects.push_back(new Line(147,166,310,167));
+    drawableObjects.push_back(new Line(310,167,365,120));
+    drawableObjects.push_back(new Line(147,166,209,112));
+    drawableObjects.push_back(new Line(209,112,365,120));
+    drawableObjects.push_back(new Line(365,120,362,261));
+    drawableObjects.push_back(new Line(362,261,309,320));
+    drawableObjects.push_back(new Line(201,259,147,320));
+    drawableObjects.push_back(new Line(209,112,201,259));
+    drawableObjects.push_back(new Line(201,259,362,261));
+}
 
 int main (int argc, char** argv)
 {
@@ -447,7 +477,7 @@ int main (int argc, char** argv)
       glutPassiveMotionFunc(mousePassiveMotion);
     
     init();
-    
+    addStartSketch();
     glutMainLoop();
     return 1;
 }

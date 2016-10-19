@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <math.h>
 #include "Line.hpp"
+#include "Point2D.hpp"
 
 using namespace std;
 const int ANGLE_THRESHOLD = 10;
@@ -21,11 +22,14 @@ bool sortFunction(Line *a , Line *b){
 }
 
 
-void assignParallelClass(vector<Line *> lines){
+int assignParallelClass(vector<Line *> lines){
     
     
     for (Line *line : lines){
-        cout << line->getAngle() << endl;
+//        cout << line->getAngle() << endl;
+        cout << "-----"<<endl;
+        cout << line->getVertex1().x << ","<<line->getVertex1().y<<endl;
+        cout << line->getVertex2().x << ","<<line->getVertex2().y<<endl;
     }
     
     cout << "sorting..."<<endl;
@@ -56,8 +60,15 @@ void assignParallelClass(vector<Line *> lines){
         line->assignParallelClass(currClassNum);
         line->assignColors(red, green, blue);
     }
+    
+    return currClassNum;
 }
 
+
+/**
+ Given a set of lines which represent a graph. this method finds small gaps in the sketch
+ and fix them my moving some vertices
+ */
 void fixSketch(vector <Line *> lines){
     for (int i = 0 ; i < lines.size() ; i++){
         
@@ -88,6 +99,94 @@ void fixSketch(vector <Line *> lines){
 float getCartesianDistance(int x1 , int y1 , int x2 , int y2){
     return sqrt( pow( x1 - x2 , 2 ) + pow( y1 - y2 , 2) );
 }
+
+
+int getAssignedId(vector<Point2D> verticesWithId , Point2D  vertexToCheck){
+    
+    for (int i = 0 ; i < verticesWithId.size() ; i++){
+        Point2D point = verticesWithId.at(i);
+        if(point.x == vertexToCheck.x && point.y == vertexToCheck.y){
+            return i + 1;
+        }
+    }
+    
+    return -1;
+}
+
+/**
+ Assing a unique Id to each vertex in the graph.
+ */
+void assignVertexIds(vector<Line*> lines){
+    
+    // to keep track of which vertices has already been assinged an id
+    vector<Point2D> assingnedVertices;
+    
+    for(Line * line : lines){
+        //check vertex1
+        Point2D vertex1 = line->getVertex1();
+        int vertex1Id = getAssignedId(assingnedVertices , vertex1);
+        if( vertex1Id == -1 ){
+            // if not assinged then assign one id
+            int nextId = int(assingnedVertices.size()) + 1;
+            line->setVertex1Id(nextId);
+            
+            assingnedVertices.push_back(vertex1);
+        }else{
+            line->setVertex1Id(vertex1Id);
+        }
+        
+        //do the same thing for vertex2
+        Point2D vertex2 = line->getVertex2();
+        int vertex2Id = getAssignedId(assingnedVertices , vertex2);
+        
+        if( vertex2Id == -1 ){
+            // if not assinged then assign one id
+            int nextId = int(assingnedVertices.size()) + 1;
+            line->setVertex2Id(nextId);
+            
+            assingnedVertices.push_back(vertex2);
+        }else{
+            line->setVertex2Id(vertex2Id);
+        }
+    }
+    
+    
+    for(Line* line : lines){
+        cout <<"Class= "<< line->getParallelClassNum() << endl;
+        cout << "Angle=="<<line->getAngle() << endl;
+        cout << line->getVertex1Id() << "   " << line->getVertex2Id() << endl;
+    }
+}
+
+vector<Line *> getAllLinesOfClass(vector<Line *> lines , int classNum){
+    vector<Line *> filteredList;
+    for (Line *line : lines){
+        if(line->getParallelClassNum() == classNum){
+            filteredList.push_back(line);
+        }
+    }
+    return filteredList;
+}
+
+void fixLineDirections(vector<Line *> lines , int numClasses){
+    
+    for(int i = 1 ; i <= numClasses ; i++){
+        vector<Line *> filteredList = getAllLinesOfClass(lines, i);
+        Line *lineToCompare = filteredList.at(0);
+        
+        if(filteredList.size() < 2){
+            continue;
+        }
+        // compare first line with every line in the class
+        // and make sure that dot product is positve
+        for (int j = 1 ; j < filteredList.size() ; j++){
+            Line *line2 = filteredList.at(j);
+            line2->alignLineDirection(lineToCompare);
+        }
+    }
+    
+}
+
 
 
 

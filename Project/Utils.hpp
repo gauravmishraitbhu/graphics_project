@@ -12,16 +12,22 @@
 #include <stdio.h>
 #include <iostream>
 #include <vector>
-#include "Line.hpp"
+
 
 using namespace std;
+
+// forward declaration
+class Line;
 
 const int OBJECT_TYPE_LINE = 1;
 const int OBJECT_TYPE_CURVE = 2;
 const int OBJECT_TYPE_BUTTON = 3;
 
-void assignParallelClass(vector<Line *> lines);
+int assignParallelClass(vector<Line *> lines);
 void fixSketch(vector <Line *> lines);
 float getCartesianDistance(int x1 , int y1 , int x2 , int y2);
+void assignVertexIds(vector<Line*> lines);
+void fixLineDirections(vector<Line *> lines , int numClasses);
+
 
 #endif /* Utils_hpp */

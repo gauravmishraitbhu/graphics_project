@@ -11,7 +11,9 @@
 #include <GLUT/GLUT.h>
 #include <iostream>
 #include <math.h>
-#include "Utils.hpp"
+
+
+
 using namespace std;
 
 
@@ -146,6 +148,29 @@ void Line::uniformifyVertices(){
             _endX = _startX;
             _startX = temp;
         }
+    }
+}
+
+void Line::alignLineDirection(Line* line){
+    // calcualte line1 vector
+    int vec1X = line->getV2X() - line->getV1X();
+    int vec1Y = line->getV2Y() - line->getV1Y();
+    
+    // calculate current line's vector
+    int thisVecX = _endX - _startX;
+    int thisVecY = _endY - _startY;
+    
+    int dotProduct = vec1X*thisVecX + vec1Y*thisVecY;
+    
+    if(dotProduct < 0){
+        // swap points
+        int temp = _endY;
+        _endY = _startY;
+        _startY = temp;
+        
+        temp = _endX;
+        _endX = _startX;
+        _startX = temp;
     }
 }
 

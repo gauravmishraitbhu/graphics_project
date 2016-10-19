@@ -10,7 +10,10 @@
 #define Line_hpp
 
 #include <stdio.h>
+#include "Utils.hpp"
 #include "DrawableObject.hpp"
+#include "Point2D.hpp"
+
 class Line : public DrawableObject{
     
 private:
@@ -21,6 +24,9 @@ private:
     int _classNum ;
     float _colorR , _colorG , _colorB;
     int _isVertex1Corrected = 0 , _isVertex2Corrected = 0;
+    
+    /* 0 indexed ids assinged to each vertex in the graph */
+    int _vertex1Id = -1 , _vertex2Id = -1;
     
 public:
     Line(){
@@ -60,12 +66,40 @@ public:
         return _startY;
     }
     
+    Point2D getVertex1(){
+        return Point2D{_startX , _startY};
+    }
+    
     int getV2X(){
         return _endX;
     }
     
     int getV2Y(){
         return _endY;
+    }
+    
+    Point2D getVertex2(){
+        return Point2D{_endX , _endY};
+    }
+    
+    int getVertex1Id(){
+        return _vertex1Id;
+    }
+    
+    void setVertex1Id(int id){
+        _vertex1Id = id;
+    }
+    
+    int getVertex2Id(){
+        return _vertex2Id;
+    }
+    
+    void setVertex2Id(int id){
+        _vertex2Id = id;
+    }
+    
+    int getParallelClassNum(){
+        return _classNum;
     }
     
     void draw();
@@ -84,6 +118,10 @@ public:
     // will set a convention that if angle of line is between -45 and 45
     // then endX > startX else endY > startY
     void uniformifyVertices();
+    
+    // make sure that this line and given line is alinged in
+    // same direction
+    void alignLineDirection(Line* line);
     
 };
 
