@@ -13,6 +13,7 @@
 
 #include <stdio.h>
 #include <iostream>
+#include <Eigen/Dense>
 
 using namespace std;
 
@@ -64,6 +65,8 @@ public:
         }
         cout << "-------------------------------------------------------------------------------"<<endl;
     }
+    
+    void performSVD();
 };
 
 #endif /* PMatrix_hpp */

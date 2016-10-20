@@ -263,6 +263,7 @@ void solveSVD(){
     matrix = new PMatrix(numRows , numCols);
     createPMatrix(matrix , lines , numParallelClasses);
     matrix->prettyPrint();
+    matrix->performSVD();
 }
 
 void initButtons(){
