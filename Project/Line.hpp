@@ -22,7 +22,7 @@ private:
     int _startX , _startY;
     int _endX , _endY;
     int _classNum ;
-    float _colorR , _colorG , _colorB;
+    float _colorR = 0, _colorG = 0 , _colorB = 0;
     int _isVertex1Corrected = 0 , _isVertex2Corrected = 0;
     
     /* 0 indexed ids assinged to each vertex in the graph */

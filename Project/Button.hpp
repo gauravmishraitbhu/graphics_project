@@ -23,7 +23,7 @@ private:
     int _highlighted;
     int _fontX , _fontY;
     char* _label;
-    int _state ;
+    int _state = 0 ;
     
     /* callback function */
     void (*clickCallback)();
@@ -37,6 +37,7 @@ public:
         _height = 100;
         _highlighted = 0;
         _label = label;
+        _state = 0;
         
     }
     
@@ -47,6 +48,7 @@ public:
         _height = 100;
         _highlighted = 0;
         _label = label;
+        _state = 0;
     }
     
     
@@ -57,6 +59,7 @@ public:
         _height = height;
         _highlighted = 0;
         _label = label;
+        _state = 0;
     }
     
     void draw();

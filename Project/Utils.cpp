@@ -13,6 +13,7 @@
 #include <math.h>
 #include "Line.hpp"
 #include "Point2D.hpp"
+#include "PMatrix.hpp"
 
 using namespace std;
 const int ANGLE_THRESHOLD = 10;
@@ -25,12 +26,12 @@ bool sortFunction(Line *a , Line *b){
 int assignParallelClass(vector<Line *> lines){
     
     
-    for (Line *line : lines){
-//        cout << line->getAngle() << endl;
-        cout << "-----"<<endl;
-        cout << line->getVertex1().x << ","<<line->getVertex1().y<<endl;
-        cout << line->getVertex2().x << ","<<line->getVertex2().y<<endl;
-    }
+//    for (Line *line : lines){
+////        cout << line->getAngle() << endl;
+//        cout << "-----"<<endl;
+//        cout << line->getVertex1().x << ","<<line->getVertex1().y<<endl;
+//        cout << line->getVertex2().x << ","<<line->getVertex2().y<<endl;
+//    }
     
     cout << "sorting..."<<endl;
     // we will sort the angles vertor.
@@ -116,7 +117,7 @@ int getAssignedId(vector<Point2D> verticesWithId , Point2D  vertexToCheck){
 /**
  Assing a unique Id to each vertex in the graph.
  */
-void assignVertexIds(vector<Line*> lines){
+vector<Point2D> assignVertexIds(vector<Line*> lines){
     
     // to keep track of which vertices has already been assinged an id
     vector<Point2D> assingnedVertices;
@@ -156,6 +157,8 @@ void assignVertexIds(vector<Line*> lines){
         cout << "Angle=="<<line->getAngle() << endl;
         cout << line->getVertex1Id() << "   " << line->getVertex2Id() << endl;
     }
+    
+    return assingnedVertices;
 }
 
 vector<Line *> getAllLinesOfClass(vector<Line *> lines , int classNum){
@@ -168,6 +171,8 @@ vector<Line *> getAllLinesOfClass(vector<Line *> lines , int classNum){
     return filteredList;
 }
 
+
+/* make sure all the lines in a class points in same direction*/
 void fixLineDirections(vector<Line *> lines , int numClasses){
     
     for(int i = 1 ; i <= numClasses ; i++){
@@ -187,6 +192,46 @@ void fixLineDirections(vector<Line *> lines , int numClasses){
     
 }
 
-
+void createPMatrix( PMatrix * matrix , vector<Line*> lines , int numClasses){
+    float** data = matrix->getData();
+    int numRows = matrix->getNumRows();
+    int numCols = matrix->getNumCols();
+    
+    // layout of the matrix is like this
+    // each row will represent a line
+    // each col will correspond to either class coefficient or vertex
+    // first 'k' cols are for classes following n-1 are for vertices
+    int currentRow = 0;
+    for(Line * line : lines){
+        // for each lines we will have equation of form
+        // vertex1Z - vertex2Z - class1 * length = 0
+        // hence coefficients will be 1 , -1 , -length
+        // -length will go into line->classNum - 1
+        // 1 will go into numClasses + vertexId - 2 (-2 because vertexClass is 1 based not 0 based)
+        // -1 will go into numCLasses + vertex2Id - 2
+        
+        
+        int vertex1Id = line->getVertex1Id();
+        // lets place 1 into the matrix at its location
+        if(vertex1Id != 1){
+            data[currentRow][numClasses + vertex1Id - 2] = 1;
+        }
+        
+        
+        int vertex2Id = line->getVertex2Id();
+        //lets place -1
+        if(vertex2Id != -1){
+            data[currentRow][numClasses + vertex2Id - 2] = -1;
+        }
+        
+        // for -length
+        float length = line->getLength();
+        data[currentRow][line->getParallelClassNum() - 1] = -1 * length;
+        
+        
+        currentRow ++;
+    }
+    
+}
 
 

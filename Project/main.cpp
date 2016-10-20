@@ -13,6 +13,7 @@
 #include "Button.hpp"
 #include <vector>
 #include "Utils.hpp"
+#include "PMatrix.hpp"
 using namespace std;
 
 
@@ -27,7 +28,12 @@ const int UI_MODE_FREEHAND = 1;
 vector< DrawableObject* > drawableObjects;
 vector <Button * > buttons;
 
+// index of the vector is vertex id Point2D contains the location
+vector<Point2D> verticesIds;
+
 Line *currentLine;
+
+PMatrix* matrix;
 
 int numParallelClasses = 0;
 
@@ -66,6 +72,19 @@ void draw3D()
     glutSolidTeapot(1);
 }
 
+void drawText(void *font,const char *text,int x,int y)
+{
+    glRasterPos2i(x, y);
+    
+    while( *text != '\0' )
+    {
+        glutBitmapCharacter( font, *text );
+        ++text;
+    }
+}
+
+
+
 /*----------------------------------------------------------------------------------------
  *	draw 2d objects in the scene.
  */
@@ -82,6 +101,15 @@ void draw2D()
     
     for (Button *btn : buttons){
         btn->draw();
+    }
+    glColor3f(1,0,0);
+    if(verticesIds.size() > 0){
+        for (int i = 0 ; i < verticesIds.size() ; i++){
+            string label = to_string(i + 1);
+            Point2D vertex = verticesIds.at(i);
+            drawText(GLUT_BITMAP_TIMES_ROMAN_24 , label.c_str() , vertex.x , vertex.y   );
+            
+        }
     }
     
     glFlush ( ); // Process all OpenGL routines as quickly as possible.
@@ -213,6 +241,7 @@ void detectParallelLinesClass(){
 void eraseAll(){
     cout << "erasing all lines" << endl;
     drawableObjects.clear();
+    verticesIds.clear();
     currentLine = NULL;
     glutPostRedisplay();
 }
@@ -226,7 +255,14 @@ void solveSVD(){
     }
     
     fixLineDirections(lines , numParallelClasses);
-    assignVertexIds(lines);
+    verticesIds = assignVertexIds(lines);
+    
+    int numRows = (int)lines.size();
+    int numCols = (int)verticesIds.size() + numParallelClasses - 1;
+    
+    matrix = new PMatrix(numRows , numCols);
+    createPMatrix(matrix , lines , numParallelClasses);
+    matrix->prettyPrint();
 }
 
 void initButtons(){
