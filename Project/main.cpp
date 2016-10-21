@@ -14,6 +14,8 @@
 #include <vector>
 #include "Utils.hpp"
 #include "PMatrix.hpp"
+#include "Point3D.hpp"
+#include "Model3D.hpp"
 using namespace std;
 
 
@@ -28,12 +30,14 @@ const int UI_MODE_FREEHAND = 1;
 vector< DrawableObject* > drawableObjects;
 vector <Button * > buttons;
 
-// index of the vector is vertex id Point2D contains the location
+// index + 1  is vertex id 
+// Point2D contains the location
 vector<Point2D> verticesIds;
 
 Line *currentLine;
 
 PMatrix* matrix;
+Model3D * model3d;
 
 int numParallelClasses = 0;
 
@@ -269,6 +273,14 @@ void solveSVD(){
 
 void runOptmimationAlgorithm(){
     cout << "Optimization Time...."<<endl;
+    vector<Line *> lines;
+    for (DrawableObject *obj : drawableObjects){
+        if(obj->getObjectType() == OBJECT_TYPE_LINE){
+            lines.push_back((Line *)obj);
+        }
+    }
+    model3d = new Model3D(lines , verticesIds);
+    model3d->getAngleCost();
 }
 
 void initButtons(){

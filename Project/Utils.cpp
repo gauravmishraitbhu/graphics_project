@@ -13,10 +13,13 @@
 #include <math.h>
 #include "Line.hpp"
 #include "Point2D.hpp"
+#include "Point3D.hpp"
 #include "PMatrix.hpp"
+#include <Eigen/Dense>
 
-
+using namespace Eigen;
 using namespace std;
+
 const int ANGLE_THRESHOLD = 10;
 
 bool sortFunction(Line *a , Line *b){
@@ -234,5 +237,6 @@ void createPMatrix( PMatrix * matrix , vector<Line*> lines , int numClasses){
     }
     
 }
+
 
 

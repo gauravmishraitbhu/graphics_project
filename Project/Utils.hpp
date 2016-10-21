@@ -18,8 +18,9 @@ using namespace std;
 
 // forward declaration
 class Line;
-class Point2D;
+class Point3D;
 class PMatrix;
+class Point2D;
 
 const int OBJECT_TYPE_LINE = 1;
 const int OBJECT_TYPE_CURVE = 2;

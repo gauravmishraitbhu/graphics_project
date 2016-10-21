@@ -174,4 +174,18 @@ void Line::alignLineDirection(Line* line){
     }
 }
 
+int Line::getNeighborVertexId(int id){
+    
+    if(_vertex1Id == id){
+        return _vertex2Id;
+    }
+    
+    if(_vertex2Id == id){
+        return _vertex1Id;
+    }
+    
+    //if none of the vertex matched return -1
+    return -1;
+}
+
 

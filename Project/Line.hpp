@@ -25,7 +25,7 @@ private:
     float _colorR = 0, _colorG = 0 , _colorB = 0;
     int _isVertex1Corrected = 0 , _isVertex2Corrected = 0;
     
-    /* 0 indexed ids assinged to each vertex in the graph */
+    /* 1 indexed ids assinged to each vertex in the graph */
     int _vertex1Id = -1 , _vertex2Id = -1;
     
 public:
@@ -122,7 +122,11 @@ public:
     // make sure that this line and given line is alinged in
     // same direction
     void alignLineDirection(Line* line);
-    
+  
+    //given a vertex id reeturns checks if
+    // given id belongs to this line if yes returns
+    // the other vertexid
+    int getNeighborVertexId(int id);
 };
 
 #endif /* Line_hpp */
