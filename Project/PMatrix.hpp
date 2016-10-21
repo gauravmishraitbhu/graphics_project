@@ -16,6 +16,7 @@
 #include <Eigen/Dense>
 
 using namespace std;
+using namespace Eigen;
 
 class PMatrix{
 
@@ -24,6 +25,8 @@ private:
     int numRows = -1;
     int numCols = -1 ;
     
+    // this will be set only after we call computePNull()
+    MatrixXf _pNullReduced;
     
 public:
     PMatrix(int rows , int cols){
@@ -66,7 +69,7 @@ public:
         cout << "-------------------------------------------------------------------------------"<<endl;
     }
     
-    void performSVD();
+    void computePNull();
 };
 
 #endif /* PMatrix_hpp */

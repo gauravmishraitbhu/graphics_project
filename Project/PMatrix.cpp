@@ -9,11 +9,59 @@
 #include "PMatrix.hpp"
 #include <Eigen/Dense>
 #include <vector>
+#include <iostream>
+#include <iomanip>
 
 using namespace Eigen;
 using namespace std;
 
-void PMatrix::performSVD(){
+
+// converts a matrix to its rref using jacobian elimination
+void RowReduce(MatrixXf *matrix)
+{
+    const int nrows = (int)matrix->rows(); // number of rows
+    const int ncols = (int)matrix->cols(); // number of columns
+    
+    int lead = 0;
+    
+    while (lead < nrows) {
+        float d, m;
+        
+        for (int r = 0; r < nrows; r++) { // for each row ...
+            /* calculate divisor and multiplier */
+            d = (*matrix)(lead,lead);
+            m = (*matrix)(r,lead) / (*matrix)(lead,lead);
+            
+            for (int c = 0; c < ncols; c++) { // for each column ...
+                if (r == lead)
+                    (*matrix)(r,c) /= d;               // make pivot = 1
+                else
+                    (*matrix)(r,c) -= (*matrix)(lead,c) * m;  // make other = 0
+            }
+        }
+        
+        lead++;
+        
+    }
+}
+
+
+MatrixXf getReducedPNull(MatrixXf pNull){
+    // do a rref on the transpose(pNull)
+    MatrixXf transposePNull= pNull.transpose();
+    
+    // now reduce this matrix
+    RowReduce(&transposePNull);
+    
+//    cout << transposePNull << endl;
+    
+    // take transpose to get pNullReduced
+    MatrixXf pNullReduced = transposePNull.transpose();
+    
+    return pNullReduced;
+}
+
+void PMatrix::computePNull(){
 
     Matrix<float , Dynamic , Dynamic > matrix(numRows , numCols);
     
@@ -23,6 +71,10 @@ void PMatrix::performSVD(){
             matrix(i,j) = data[i][j];
         }
     }
+    // the first step is we go a svd of the pMatrix
+    // then we take column vectors from V matrix which
+    // correpond to singlular values which are nearing 0
+    
     
     JacobiSVD<MatrixXf> svd(matrix, ComputeThinU | ComputeThinV);
     // need to find the columns of v whose corresponding
@@ -64,12 +116,11 @@ void PMatrix::performSVD(){
     
     
     cout << "PNull Computed" << endl;
-    cout << pNull << endl;
+    cout << "getting rref of the pNull matrix" << endl;
     
-    // do a rref on the pNull
+    // now get pNullReduced
+    _pNullReduced = getReducedPNull(pNull);
+    cout << _pNullReduced << endl;
     
-    
-//    cout << "Its singular values are:" << endl << svd.singularValues() << endl;
-//    cout << "Its left singular vectors are the columns of the thin U matrix:" << endl << svd.matrixU() << endl;
-//    cout << "Its right singular vectors are the columns of the thin V matrix:" << endl << svd.matrixV() << endl;
 }
+

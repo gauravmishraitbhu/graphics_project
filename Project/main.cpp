@@ -263,21 +263,46 @@ void solveSVD(){
     matrix = new PMatrix(numRows , numCols);
     createPMatrix(matrix , lines , numParallelClasses);
     matrix->prettyPrint();
-    matrix->performSVD();
+    matrix->computePNull();
+}
+
+
+void runOptmimationAlgorithm(){
+    cout << "Optimization Time...."<<endl;
 }
 
 void initButtons(){
-    Button *detectParallelClassBtn  = new Button("Detect" , 10,10,80,30);
-    buttons.push_back(detectParallelClassBtn);
-    detectParallelClassBtn->addClickCallback(detectParallelLinesClass);
+    int x = 10;
+    int width = 110;
+    int height = 30;
+    int y = 10;
+    int padding = 15;
     
-    Button *removeAllBtn = new Button("Erase All" , 100 , 10 , 80 , 30);
+    Button *removeAllBtn = new Button("Erase All" , x,y,width,height);
     buttons.push_back(removeAllBtn);
     removeAllBtn->addClickCallback(eraseAll);
     
-    Button *solveSVDBtn = new Button("Solve SVD" , 190 , 10 , 80 , 30);
+    x += width + padding;
+
+    
+    Button *detectParallelClassBtn  = new Button("Detect" , x,y,width,height);
+    buttons.push_back(detectParallelClassBtn);
+    detectParallelClassBtn->addClickCallback(detectParallelLinesClass);
+    
+    x += width + padding;
+    
+    
+    Button *solveSVDBtn = new Button("Compute PNull" , x,y,width,height);
     buttons.push_back(solveSVDBtn);
     solveSVDBtn->addClickCallback(solveSVD);
+    
+    x += width + padding;
+    
+    Button *beginOptimizeBtn = new Button("Run Optimization" , x,y,width,height);
+    buttons.push_back(beginOptimizeBtn);
+    beginOptimizeBtn->addClickCallback(runOptmimationAlgorithm);
+    
+    x += width + padding;
 }
 
 /*

@@ -22,7 +22,7 @@ private:
     int _width , _height;
     int _highlighted;
     int _fontX , _fontY;
-    char* _label;
+    const char* _label;
     int _state = 0 ;
     
     /* callback function */
@@ -30,7 +30,7 @@ private:
     
     
 public:
-    Button(char* label){
+    Button(const char* label){
         _startX = 0;
         _startY = 0;
         _width = 100;
@@ -41,7 +41,7 @@ public:
         
     }
     
-    Button(char* label , int startX , int startY){
+    Button(const char* label , int startX , int startY){
         _startX = startX;
         _startY = startY;
         _width = 100;
@@ -52,7 +52,7 @@ public:
     }
     
     
-    Button(char* label , int startX , int startY , int width , int height){
+    Button(const char* label , int startX , int startY , int width , int height){
         _startX = startX;
         _startY = startY;
         _width = width;

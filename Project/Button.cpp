@@ -12,7 +12,7 @@
 #include <iostream>
 using namespace std;
 
-void Font(void *font,char *text,int x,int y)
+void Font(void *font,const char *text,int x,int y)
 {
     glRasterPos2i(x, y);
     
@@ -21,6 +21,16 @@ void Font(void *font,char *text,int x,int y)
         glutBitmapCharacter( font, *text );
         ++text;
     }
+}
+
+int getLabelLength(const char *text){
+    int len = 0;
+    while( *text != '\0' )
+    {
+        len ++ ;
+        ++text;
+    }
+    return len;
 }
 
 void Button::setHighlighted(int highlight){
@@ -77,12 +87,12 @@ void Button::draw(){
     
     glLineWidth(1);
     
-    
+    int numChars = getLabelLength(_label);
     /*
      *	Calculate the x and y coords for the text string in order to center it.
      */
-    _fontX = _startX + (_width - 50) / 2 ;
-    _fontY = _startY + (_startY + 10 )/2;
+    _fontX = _startX + (_width - numChars * 7) / 2 ;
+    _fontY = _startY + (_height + 10 )/2;
     
     /*
      *	if the button is pressed, make it look as though the string has been pushed
@@ -99,13 +109,13 @@ void Button::draw(){
     if(_highlighted)
     {
         glColor3f(0,0,0);
-        Font(GLUT_BITMAP_HELVETICA_10,_label,_fontX,_fontY);
+        Font(GLUT_BITMAP_HELVETICA_12,_label,_fontX,_fontY);
         _fontX--;
         _fontY--;
     }
     
     glColor3f(1,1,1);
-    Font(GLUT_BITMAP_HELVETICA_10,_label,_fontX,_fontY);
+    Font(GLUT_BITMAP_HELVETICA_12,_label,_fontX,_fontY);
 }
 
 int Button::buttonClickTest(int x , int y){
