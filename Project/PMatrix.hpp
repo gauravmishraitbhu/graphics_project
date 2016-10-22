@@ -70,6 +70,10 @@ public:
     }
     
     void computePNull();
+    
+    MatrixXf getPNullMatrix(){
+        return _pNullReduced;
+    }
 };
 
 #endif /* PMatrix_hpp */

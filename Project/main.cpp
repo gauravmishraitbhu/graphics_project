@@ -280,7 +280,9 @@ void runOptmimationAlgorithm(){
         }
     }
     model3d = new Model3D(lines , verticesIds);
-    model3d->getAngleCost();
+    
+    MatrixXf pNull = matrix->getPNullMatrix();
+    model3d->optimizeOnAngleCost(pNull , numParallelClasses);
 }
 
 void initButtons(){

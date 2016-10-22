@@ -16,8 +16,9 @@
 
 #include <vector>
 #include <stdio.h>
-
+#include <Eigen/Dense>
 using namespace std;
+using namespace Eigen;
 
 class Line;
 class Point2D;
@@ -35,14 +36,18 @@ private:
     
     vector<Point3D> vertices3D;
     
+    double getAngleCostForDegree(int degree);
+    
 public:
     Model3D(vector<Line *> lines , vector<Point2D> vertices);
     
-    // from the given geometry this method will calculate angle complexity
-    // Cost
-    double getAngleCost();
+//    // from the given geometry this method will calculate angle complexity
+//    // Cost
+//    double getAngleCost();
     
+    void optimizeOnAngleCost(MatrixXf pNull , int numParallelClasses);
     
+    void updateDepthsOfVertices(vector<float> depths);
 };
 
 
