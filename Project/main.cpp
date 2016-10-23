@@ -25,6 +25,15 @@ const int WINDOW_WIDTH = 640;
 
 const int UI_MODE_LINE = 0;
 const int UI_MODE_FREEHAND = 1;
+const int UI_3D_RENDER = 2;
+
+
+struct ViewTransform{
+    float xRotation = 0;
+    float yRotation = 0;
+    float zoom = 0;
+} viewTransform;
+
 
 
 vector< DrawableObject* > drawableObjects;
@@ -39,10 +48,15 @@ Line *currentLine;
 PMatrix* matrix;
 Model3D * model3d;
 
+
 int numParallelClasses = 0;
 
-// 0 -- line Mode , 1 -- free hand
-int UIMode = 0;
+int mainWindow , otherWindow;
+
+bool toDraw3Dmodel = false;
+
+// 0 -- line Mode , 1 -- free hand , 2 - 3d model shown
+int UIMode = UI_MODE_LINE;
 
 struct Mouse
 {
@@ -55,25 +69,117 @@ struct Mouse
     int yDragStart; /*	stores the y-coord of when the first button press occurred	*/
 };
 
+
 struct Mouse mouseController{0,0,0,0,0};
 
+
+struct Camera{
+    int eyeX;
+    int eyeY;
+    int eyeZ;
+};
+
+struct Camera cameraController{0,1,5};
 
 /* initialize opengl */
 void init()
 {
-    glEnable(GL_LIGHT0);
+//    glEnable(GL_LIGHT0);
     glClearColor (1.0, 1.0, 1.0, 0.0); // Set display-window color to white.
     glMatrixMode (GL_PROJECTION); // Set projection parameters.
-//    gluOrtho2D (0.0, 800, 0.0, 600);
+    gluOrtho2D (0.0, 640, 0.0, 480);
     
 }
+
+void draw3Dmodel(){
+    gluOrtho2D (0.0, 640, 0.0, 480 );
+    model3d->draw();
+}
+
+void initGLFor3D() {
+    glEnable(GL_LIGHT0);
+    float vAmbientLightBright[4] = {0.5f, 0.5f, 0.5f, 1.0f};
+    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, vAmbientLightBright);
+
+    glColorMaterial ( GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE );
+    glEnable ( GL_COLOR_MATERIAL );
+    glClearColor(1.0f, 1.0f, 1.0f, 0.0f); // Set background color to black and opaque
+    glClearDepth(1.0f);                   // Set background depth to farthest
+    glEnable(GL_DEPTH_TEST);   // Enable depth testing for z-culling
+    glDepthFunc(GL_LEQUAL);    // Set the type of depth-test
+    glShadeModel(GL_SMOOTH);   // Enable smooth shading
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);  // Nice perspective corrections
+}
+
+void drawTest3Dmodel(){
+    glBegin(GL_QUADS);                // Begin drawing the color cube with 6 quads
+    // Top face (y = 1.0f)
+    // Define vertices in counter-clockwise (CCW) order with normal pointing out
+    glColor3f(0.0f, 1.0f, 0.0f);     // Green
+    glVertex3f( 1.0f, 1.0f, -1.0f);
+    glVertex3f(-1.0f, 1.0f, -1.0f);
+    glVertex3f(-1.0f, 1.0f,  1.0f);
+    glVertex3f( 1.0f, 1.0f,  1.0f);
+    
+    // Bottom face (y = -1.0f)
+    glColor3f(1.0f, 0.5f, 0.0f);     // Orange
+    glVertex3f( 1.0f, -1.0f,  1.0f);
+    glVertex3f(-1.0f, -1.0f,  1.0f);
+    glVertex3f(-1.0f, -1.0f, -1.0f);
+    glVertex3f( 1.0f, -1.0f, -1.0f);
+    
+    // Front face  (z = 1.0f)
+    glColor3f(1.0f, 0.0f, 0.0f);     // Red
+    glVertex3f( 1.0f,  1.0f, 1.0f);
+    glVertex3f(-1.0f,  1.0f, 1.0f);
+    glVertex3f(-1.0f, -1.0f, 1.0f);
+    glVertex3f( 1.0f, -1.0f, 1.0f);
+    
+    // Back face (z = -1.0f)
+    glColor3f(1.0f, 1.0f, 0.0f);     // Yellow
+    glVertex3f( 1.0f, -1.0f, -1.0f);
+    glVertex3f(-1.0f, -1.0f, -1.0f);
+    glVertex3f(-1.0f,  1.0f, -1.0f);
+    glVertex3f( 1.0f,  1.0f, -1.0f);
+    
+    // Left face (x = -1.0f)
+    glColor3f(0.0f, 0.0f, 1.0f);     // Blue
+    glVertex3f(-1.0f,  1.0f,  1.0f);
+    glVertex3f(-1.0f,  1.0f, -1.0f);
+    glVertex3f(-1.0f, -1.0f, -1.0f);
+    glVertex3f(-1.0f, -1.0f,  1.0f);
+    
+    // Right face (x = 1.0f)
+    glColor3f(1.0f, 0.0f, 1.0f);     // Magenta
+    glVertex3f(1.0f,  1.0f, -1.0f);
+    glVertex3f(1.0f,  1.0f,  1.0f);
+    glVertex3f(1.0f, -1.0f,  1.0f);
+    glVertex3f(1.0f, -1.0f, -1.0f);
+    glEnd();  // End of drawing color-cube//    glutSolidTeapot(1);
+}
+
 
 /*----------------------------------------------------------------------------------------
  *	draw 3d objects in the scene */
 void draw3D()
 {
-    gluLookAt(0,1,5,0,0,0,0,1,0);
-    glutSolidTeapot(1);
+    gluLookAt(cameraController.eyeX,cameraController.eyeY,cameraController.eyeZ,0,0,0,0,1,0);
+    glTranslatef(0,0,-viewTransform.zoom);
+    glRotatef(viewTransform.xRotation,1,0,0);
+    glRotatef(viewTransform.yRotation,0,1,0);
+    glColor3f(0, 0, 0);
+    glBegin(GL_LINES);
+    for(int i=-10;i<=10;++i) {
+        glVertex3f(i,0,-10);
+        glVertex3f(i,0,10);
+        
+        glVertex3f(10,0,i);
+        glVertex3f(-10,0,i);
+    }
+    glEnd();
+    
+    draw3Dmodel();
+    
 }
 
 void drawText(void *font,const char *text,int x,int y)
@@ -130,45 +236,52 @@ void draw (void)
     glClear( GL_COLOR_BUFFER_BIT |
             GL_DEPTH_BUFFER_BIT );
     
-    /*
-     *	Enable lighting and the z-buffer
-     */
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_LIGHTING);
+    if(toDraw3Dmodel){
+        /*
+         *	Enable lighting and the z-buffer
+         */
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_LIGHTING);
+        
+        /*
+         *	Set perspective viewing transformation
+         */
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        gluPerspective(45,(WINDOW_HEIGHT==0)?(1):((float)WINDOW_WIDTH/WINDOW_HEIGHT),0.1f,1000);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        
+        /*
+         *	Draw the 3D elements in the scene
+         */
+        
+        draw3D();
+
+    }else{
+        /*
+         *	Disable depth test and lighting for 2D elements
+         */
+        glDisable(GL_DEPTH_TEST);
+        glDisable(GL_LIGHTING);
+        
+        /*
+         *	Set the orthographic viewing transformation
+         */
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0,WINDOW_WIDTH,WINDOW_HEIGHT,0,-1,1);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        
+        /*
+         *	Draw the 2D overlay
+         */
+        draw2D();
+
+    }
     
-    /*
-     *	Set perspective viewing transformation
-     */
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective(45,(WINDOW_HEIGHT==0)?(1):((float)WINDOW_WIDTH/WINDOW_HEIGHT),1,100);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
     
-    /*
-     *	Draw the 3D elements in the scene
-     */
-    //draw3D();
-    
-    /*
-     *	Disable depth test and lighting for 2D elements
-     */
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_LIGHTING);
-    
-    /*
-     *	Set the orthographic viewing transformation
-     */
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0,WINDOW_WIDTH,WINDOW_HEIGHT,0,-1,1);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    
-    /*
-     *	Draw the 2D overlay
-     */
-    draw2D();
     
     /*
      *	Bring the back buffer to the front and vice-versa.
@@ -282,7 +395,16 @@ void runOptmimationAlgorithm(){
     model3d = new Model3D(lines , verticesIds);
     
     MatrixXf pNull = matrix->getPNullMatrix();
-    model3d->optimizeOnAngleCost(pNull , numParallelClasses);
+//    model3d->optimizeOnAngleCost(pNull , numParallelClasses);
+    model3d->optimizeOnTotalCost(pNull, numParallelClasses);
+}
+
+void render3dModel(){
+    cout << "render 3d model" << endl;
+    toDraw3Dmodel = true;
+    UIMode = UI_3D_RENDER;
+    initGLFor3D();
+    glutPostRedisplay();
 }
 
 void initButtons(){
@@ -315,6 +437,12 @@ void initButtons(){
     Button *beginOptimizeBtn = new Button("Run Optimization" , x,y,width,height);
     buttons.push_back(beginOptimizeBtn);
     beginOptimizeBtn->addClickCallback(runOptmimationAlgorithm);
+    
+    x += width + padding;
+    
+    Button *renderBtn = new Button("Render3D" , x,y,width,height);
+    buttons.push_back(renderBtn);
+    renderBtn->addClickCallback(render3dModel);
     
     x += width + padding;
 }
@@ -538,21 +666,67 @@ void addStartSketch(){
     drawableObjects.push_back(new Line(201,259,362,261));
 }
 
+void reshape(GLsizei width, GLsizei height) {  // GLsizei for non-negative integer
+    // Compute aspect ratio of the new window
+    if (height == 0) height = 1;                // To prevent divide by 0
+    GLfloat aspect = (GLfloat)width / (GLfloat)height;
+    
+    // Set the viewport to cover the new window
+    glViewport(0, 0, width, height);
+    
+    // Set the aspect ratio of the clipping volume to match the viewport
+    glMatrixMode(GL_PROJECTION);  // To operate on the Projection matrix
+    glLoadIdentity();             // Reset
+    // Enable perspective projection with fovy, aspect, zNear and zFar
+    gluPerspective(45.0f, aspect, 0.1f, 100.0f);
+}
+
+void keyboardHandler(unsigned char ch, int x , int y){
+    float stepSize = 0.5;
+    
+    // keyboard strokes only when in 3d model viewing mode
+    if(UIMode == UI_3D_RENDER){
+        if(ch == 'w'){
+            
+            viewTransform.xRotation += stepSize;
+        }else if(ch == 's'){
+
+            viewTransform.xRotation -= stepSize;
+        }else if(ch == 'a'){
+
+            viewTransform.yRotation += stepSize;
+        }else if(ch == 'd'){
+            viewTransform.yRotation -= stepSize;
+        }else if(ch == 'z'){
+            viewTransform.zoom += stepSize;
+        }else if(ch == 'x'){
+            viewTransform.zoom -= stepSize;
+        }
+        
+    }
+    
+    glutPostRedisplay();
+    
+}
+
+
 int main (int argc, char** argv)
 {
     glutInit(&argc,argv);
     glutInitDisplayMode(GLUT_RGB|GLUT_DEPTH|GLUT_DOUBLE);
     glutInitWindowSize(WINDOW_WIDTH,WINDOW_HEIGHT);
     glutInitWindowPosition(200,100);
-    glutCreateWindow("3D Reconstruction");
+    mainWindow = glutCreateWindow("3D Reconstruction");
     initButtons();
     glutDisplayFunc(draw);
-//    glutReshapeFunc(Resize);
-      glutMouseFunc(mouseClicked);
-      glutMotionFunc(mouseMove);
-      glutPassiveMotionFunc(mousePassiveMotion);
+    glutReshapeFunc(reshape);
+    glutMouseFunc(mouseClicked);
+    glutMotionFunc(mouseMove);
+    glutPassiveMotionFunc(mousePassiveMotion);
+    glutKeyboardFunc(keyboardHandler);
     
     init();
+//    initGLFor3D();
     addStartSketch();
     glutMainLoop();
     return 1;

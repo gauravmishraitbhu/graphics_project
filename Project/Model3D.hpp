@@ -47,7 +47,13 @@ public:
     
     void optimizeOnAngleCost(MatrixXf pNull , int numParallelClasses);
     
+    void optimizeOnTotalCostGivenSVector(MatrixXf pNull , int numParallelClasses , MatrixXf sVector);
+    
     void updateDepthsOfVertices(vector<float> depths);
+    
+    void optimizeOnTotalCost(MatrixXf pNull , int numParallelClasses);
+    
+    void draw();
 };
 
 

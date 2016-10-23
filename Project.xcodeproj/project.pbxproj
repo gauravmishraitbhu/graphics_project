@@ -12,6 +12,12 @@
 		F443C8E91D9BA06400DCF6EC /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F443C8E71D9BA06400DCF6EC /* OpenGL.framework */; };
 		F443C8EC1D9C293400DCF6EC /* DrawableObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F443C8EA1D9C293400DCF6EC /* DrawableObject.cpp */; };
 		F443C8EF1D9C2AC800DCF6EC /* Line.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F443C8ED1D9C2AC800DCF6EC /* Line.cpp */; };
+		F4A313F41DB485C800A35F36 /* Button.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F4A313F21DB485C800A35F36 /* Button.cpp */; };
+		F4A313F71DB548A800A35F36 /* Utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F4A313F51DB548A800A35F36 /* Utils.cpp */; };
+		F4A313FA1DB75A2700A35F36 /* Point2D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F4A313F81DB75A2700A35F36 /* Point2D.cpp */; };
+		F4A313FD1DB8659500A35F36 /* PMatrix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F4A313FB1DB8659500A35F36 /* PMatrix.cpp */; };
+		F4A314001DB9D6B200A35F36 /* Point3D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F4A313FE1DB9D6B200A35F36 /* Point3D.cpp */; };
+		F4A314031DB9DB4500A35F36 /* Model3D.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F4A314011DB9DB4500A35F36 /* Model3D.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -35,6 +41,18 @@
 		F443C8EB1D9C293400DCF6EC /* DrawableObject.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = DrawableObject.hpp; sourceTree = "<group>"; };
 		F443C8ED1D9C2AC800DCF6EC /* Line.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Line.cpp; sourceTree = "<group>"; };
 		F443C8EE1D9C2AC800DCF6EC /* Line.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Line.hpp; sourceTree = "<group>"; };
+		F4A313F21DB485C800A35F36 /* Button.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Button.cpp; sourceTree = "<group>"; };
+		F4A313F31DB485C800A35F36 /* Button.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Button.hpp; sourceTree = "<group>"; };
+		F4A313F51DB548A800A35F36 /* Utils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Utils.cpp; sourceTree = "<group>"; };
+		F4A313F61DB548A800A35F36 /* Utils.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Utils.hpp; sourceTree = "<group>"; };
+		F4A313F81DB75A2700A35F36 /* Point2D.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Point2D.cpp; sourceTree = "<group>"; };
+		F4A313F91DB75A2700A35F36 /* Point2D.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Point2D.hpp; sourceTree = "<group>"; };
+		F4A313FB1DB8659500A35F36 /* PMatrix.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PMatrix.cpp; sourceTree = "<group>"; };
+		F4A313FC1DB8659500A35F36 /* PMatrix.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = PMatrix.hpp; sourceTree = "<group>"; };
+		F4A313FE1DB9D6B200A35F36 /* Point3D.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Point3D.cpp; sourceTree = "<group>"; };
+		F4A313FF1DB9D6B200A35F36 /* Point3D.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Point3D.hpp; sourceTree = "<group>"; };
+		F4A314011DB9DB4500A35F36 /* Model3D.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Model3D.cpp; sourceTree = "<group>"; };
+		F4A314021DB9DB4500A35F36 /* Model3D.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Model3D.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -75,6 +93,18 @@
 				F443C8EB1D9C293400DCF6EC /* DrawableObject.hpp */,
 				F443C8ED1D9C2AC800DCF6EC /* Line.cpp */,
 				F443C8EE1D9C2AC800DCF6EC /* Line.hpp */,
+				F4A313F21DB485C800A35F36 /* Button.cpp */,
+				F4A313F31DB485C800A35F36 /* Button.hpp */,
+				F4A313F51DB548A800A35F36 /* Utils.cpp */,
+				F4A313F61DB548A800A35F36 /* Utils.hpp */,
+				F4A313F81DB75A2700A35F36 /* Point2D.cpp */,
+				F4A313F91DB75A2700A35F36 /* Point2D.hpp */,
+				F4A313FB1DB8659500A35F36 /* PMatrix.cpp */,
+				F4A313FC1DB8659500A35F36 /* PMatrix.hpp */,
+				F4A313FE1DB9D6B200A35F36 /* Point3D.cpp */,
+				F4A313FF1DB9D6B200A35F36 /* Point3D.hpp */,
+				F4A314011DB9DB4500A35F36 /* Model3D.cpp */,
+				F4A314021DB9DB4500A35F36 /* Model3D.hpp */,
 			);
 			path = Project;
 			sourceTree = "<group>";
@@ -147,7 +177,13 @@
 			files = (
 				F443C8EF1D9C2AC800DCF6EC /* Line.cpp in Sources */,
 				F443C8EC1D9C293400DCF6EC /* DrawableObject.cpp in Sources */,
+				F4A313FA1DB75A2700A35F36 /* Point2D.cpp in Sources */,
 				F443C8DF1D9B9D3900DCF6EC /* main.cpp in Sources */,
+				F4A313FD1DB8659500A35F36 /* PMatrix.cpp in Sources */,
+				F4A314001DB9D6B200A35F36 /* Point3D.cpp in Sources */,
+				F4A314031DB9DB4500A35F36 /* Model3D.cpp in Sources */,
+				F4A313F71DB548A800A35F36 /* Utils.cpp in Sources */,
+				F4A313F41DB485C800A35F36 /* Button.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -244,16 +280,20 @@
 		F443C8E31D9B9D3900DCF6EC /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = /Users/gaurav/Graphics/Eigen;
 			};
 			name = Debug;
 		};
 		F443C8E41D9B9D3900DCF6EC /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = /Users/gaurav/Graphics/Eigen;
 			};
 			name = Release;
 		};
@@ -276,6 +316,7 @@
 				F443C8E41D9B9D3900DCF6EC /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
