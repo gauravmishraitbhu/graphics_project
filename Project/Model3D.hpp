@@ -38,6 +38,9 @@ private:
     
     double getAngleCostForDegree(int degree);
     
+    MatrixXf _sVector;
+    bool optmizationDone = false;
+    
 public:
     Model3D(vector<Line *> lines , vector<Point2D> vertices);
     

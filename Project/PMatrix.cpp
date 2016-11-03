@@ -93,7 +93,7 @@ void PMatrix::computePNull(){
     for (int i = 0 ; i < singularVals.size() ; i++){
         float currEigenVal = singularVals(i);
         
-        if(currEigenVal < threshold){
+        if(currEigenVal > threshold){
             columnsToTake.push_back(i);
         }
     }

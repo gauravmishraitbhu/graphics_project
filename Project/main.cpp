@@ -32,6 +32,8 @@ struct ViewTransform{
     float xRotation = 0;
     float yRotation = 0;
     float zoom = 0;
+    float tx = 0;
+    float ty = 0;
 } viewTransform;
 
 
@@ -91,9 +93,13 @@ void init()
     
 }
 
+void drawTest3Dmodel();
+
 void draw3Dmodel(){
-    gluOrtho2D (0.0, 640, 0.0, 480 );
+//    gluOrtho2D (0.0, 640, 0.0, 480 );
     model3d->draw();
+//    drawTest3Dmodel();
+    
 }
 
 void initGLFor3D() {
@@ -165,6 +171,7 @@ void draw3D()
 {
     gluLookAt(cameraController.eyeX,cameraController.eyeY,cameraController.eyeZ,0,0,0,0,1,0);
     glTranslatef(0,0,-viewTransform.zoom);
+    glTranslatef(viewTransform.tx,viewTransform.ty,0);
     glRotatef(viewTransform.xRotation,1,0,0);
     glRotatef(viewTransform.yRotation,0,1,0);
     glColor3f(0, 0, 0);
@@ -175,6 +182,13 @@ void draw3D()
         
         glVertex3f(10,0,i);
         glVertex3f(-10,0,i);
+        
+//        glVertex3f(10,i,0);
+//        glVertex3f(-10,i,0);
+//        
+//        glVertex3f(i,10,0);
+//        glVertex3f(i,-10,0);
+        
     }
     glEnd();
     
@@ -192,6 +206,7 @@ void drawText(void *font,const char *text,int x,int y)
         ++text;
     }
 }
+
 
 
 
@@ -392,11 +407,14 @@ void runOptmimationAlgorithm(){
             lines.push_back((Line *)obj);
         }
     }
-    model3d = new Model3D(lines , verticesIds);
+    if(model3d == NULL){
+        model3d = new Model3D(lines , verticesIds);
+    }
+    
     
     MatrixXf pNull = matrix->getPNullMatrix();
-//    model3d->optimizeOnAngleCost(pNull , numParallelClasses);
-    model3d->optimizeOnTotalCost(pNull, numParallelClasses);
+    model3d->optimizeOnAngleCost(pNull , numParallelClasses);
+//    model3d->optimizeOnTotalCost(pNull, numParallelClasses);
 }
 
 void render3dModel(){
@@ -619,7 +637,9 @@ void mouseMove(int x , int y){
         case UI_MODE_LINE:
             updateCurrentLine(x, y);
             break;
-            
+        case UI_3D_RENDER:
+            viewTransform.xRotation += (float) 0.5f * dy;
+            viewTransform.yRotation += (float) 0.5f * dx;
         default:
             break;
     }
@@ -682,21 +702,21 @@ void reshape(GLsizei width, GLsizei height) {  // GLsizei for non-negative integ
 }
 
 void keyboardHandler(unsigned char ch, int x , int y){
-    float stepSize = 0.5;
+    float stepSize = 1;
     
     // keyboard strokes only when in 3d model viewing mode
     if(UIMode == UI_3D_RENDER){
         if(ch == 'w'){
             
-            viewTransform.xRotation += stepSize;
+            viewTransform.ty -= stepSize;
         }else if(ch == 's'){
 
-            viewTransform.xRotation -= stepSize;
+            viewTransform.ty += stepSize;
         }else if(ch == 'a'){
 
-            viewTransform.yRotation += stepSize;
+            viewTransform.tx += stepSize;
         }else if(ch == 'd'){
-            viewTransform.yRotation -= stepSize;
+            viewTransform.tx -= stepSize;
         }else if(ch == 'z'){
             viewTransform.zoom += stepSize;
         }else if(ch == 'x'){
