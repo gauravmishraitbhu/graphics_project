@@ -177,20 +177,46 @@ void draw3D()
     glColor3f(0, 0, 0);
     glBegin(GL_LINES);
     for(int i=-10;i<=10;++i) {
-        glVertex3f(i,0,-10);
-        glVertex3f(i,0,10);
         
-        glVertex3f(10,0,i);
-        glVertex3f(-10,0,i);
+        int length = 10;
         
-//        glVertex3f(10,i,0);
-//        glVertex3f(-10,i,0);
-//        
-//        glVertex3f(i,10,0);
-//        glVertex3f(i,-10,0);
+        if(i == 0){
+            length = 0;
+        }
+        // x z plane
+        glVertex3f(i,0,-1 * length);
+        glVertex3f(i,0,length);
+        
+        glVertex3f(length,0,i);
+        glVertex3f(-1 * length,0,i);
+        
+        // x y plane
+        glVertex3f(length,i,0);
+        glVertex3f(-1 * length,i,0);
+        
+        glVertex3f(i,length,0);
+        glVertex3f(i,-1 * length,0);
         
     }
     glEnd();
+    
+    glColor3f(1, 0, 0);
+    glLineWidth(3);
+    glBegin(GL_LINES);
+    
+    // positive x axis
+    glVertex3f(0,0,0);
+    glVertex3f(20,0,0);
+    
+    // positive y axis
+    glVertex3f(0,0,0);
+    glVertex3f(0,20,0);
+    
+    //positive z axis
+    glVertex3f(0,0,0);
+    glVertex3f(0,0,20);
+    glEnd();
+    glLineWidth(1);
     
     draw3Dmodel();
     
@@ -365,7 +391,10 @@ void detectParallelLinesClass(){
     // make the edge vectors uniform
     for(Line * line : lines ){
         line->uniformifyVertices();
+        cout << line->getV1X() << "    " << line->getV1Y() << endl;
+        cout << line->getV2X() << "    " << line->getV2Y() << endl;
     }
+    
     numParallelClasses = assignParallelClass(lines);
     glutPostRedisplay();
 }
@@ -672,18 +701,34 @@ void mousePassiveMotion(int x , int y){
 }
 
 void addStartSketch(){
-    drawableObjects.push_back(new Line(147,166,147,320));
-    drawableObjects.push_back(new Line(147,320,309,320));
-    drawableObjects.push_back(new Line(310,167,309,320));
-    drawableObjects.push_back(new Line(147,166,310,167));
-    drawableObjects.push_back(new Line(310,167,365,120));
-    drawableObjects.push_back(new Line(147,166,209,112));
-    drawableObjects.push_back(new Line(209,112,365,120));
-    drawableObjects.push_back(new Line(365,120,362,261));
-    drawableObjects.push_back(new Line(362,261,309,320));
-    drawableObjects.push_back(new Line(201,259,147,320));
-    drawableObjects.push_back(new Line(209,112,201,259));
-    drawableObjects.push_back(new Line(201,259,362,261));
+//    drawableObjects.push_back(new Line(147,166,147,320));
+//    drawableObjects.push_back(new Line(147,320,309,320));
+//    drawableObjects.push_back(new Line(310,167,309,320));
+//    drawableObjects.push_back(new Line(147,166,310,167));
+//    drawableObjects.push_back(new Line(310,167,365,120));
+//    drawableObjects.push_back(new Line(147,166,209,112));
+//    drawableObjects.push_back(new Line(209,112,365,120));
+//    drawableObjects.push_back(new Line(365,120,362,261));
+//    drawableObjects.push_back(new Line(362,261,309,320));
+//    drawableObjects.push_back(new Line(201,259,147,320));
+//    drawableObjects.push_back(new Line(209,112,201,259));
+//    drawableObjects.push_back(new Line(201,259,362,261));
+    
+    
+    
+    // prism
+    drawableObjects.push_back(new Line(162,235,104,346));
+    drawableObjects.push_back(new Line(162,235,217,346));
+    
+    drawableObjects.push_back(new Line(104,346,217,346));
+    drawableObjects.push_back(new Line(162,235,371,187));
+    
+    drawableObjects.push_back(new Line(371,187,323,292));
+    drawableObjects.push_back(new Line(323,292,431,292));
+    drawableObjects.push_back(new Line(371,187,431,292));
+    drawableObjects.push_back(new Line(217,345,431,292));
+    drawableObjects.push_back(new Line(104,346,323,292));
+    
 }
 
 void reshape(GLsizei width, GLsizei height) {  // GLsizei for non-negative integer

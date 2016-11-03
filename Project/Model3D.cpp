@@ -344,7 +344,7 @@ double getLineCost(vector<Point3D> vertices3D ,vector<Line*> sketchLines){
 
 
 void Model3D::updateDepthsOfVertices(vector<float> depths){
-    assert(depths.size() == 7);
+//    assert(depths.size() == 7);
     for(int i = 0 ; i < depths.size() ; i++){
         Point3D vertex = vertices3D.at(i+1);
         vertex.z = depths.at(i);
@@ -377,13 +377,14 @@ vector<int> getNRandoms(int maxNum , int n){
     return results;
 }
 
-double getAngleCostForGivenSVector(MatrixXf pNull , MatrixXf sVector , vector<Point3D> vertices3D , vector<Line *> sketchLines){
+double getAngleCostForGivenSVector(MatrixXf pNull , MatrixXf sVector , vector<Point3D> vertices3D , vector<Line *> sketchLines,
+                                   int numParallelClasses){
     // find the depths for given svector
     MatrixXf product = pNull*sVector ;
     
     // now we will update the depths of each vertex
     vector<float> depths;
-    for(int  i = 3 ; i < product.rows() ; i++){
+    for(int  i = numParallelClasses ; i < product.rows() ; i++){
         // these are depths for v2,v3,..... v1 = 0
         depths.push_back(product(i,0));
     }
@@ -406,13 +407,14 @@ double getAngleCostForGivenSVector(MatrixXf pNull , MatrixXf sVector , vector<Po
 
 
 
-double getTotalCostForGivenSVector(MatrixXf pNull , MatrixXf sVector , vector<Point3D> vertices3D , vector<Line *> sketchLines){
+double getTotalCostForGivenSVector(MatrixXf pNull , MatrixXf sVector , vector<Point3D> vertices3D , vector<Line *> sketchLines,
+                                   int numParallelClasses){
     // find the depths for given svector
     MatrixXf product = pNull*sVector ;
     
     // now we will update the depths of each vertex
     vector<float> depths;
-    for(int  i = 3 ; i < product.rows() ; i++){
+    for(int  i = numParallelClasses ; i < product.rows() ; i++){
         // these are depths for v2,v3,..... v1 = 0
         depths.push_back(product(i,0));
     }
@@ -466,7 +468,7 @@ void Model3D::optimizeOnTotalCostGivenSVector(MatrixXf pNull , int numParallelCl
     
     
     
-    double previousCost = getTotalCostForGivenSVector(pNull , sVector , vertices3D , sketchLines);
+    double previousCost = getTotalCostForGivenSVector(pNull , sVector , vertices3D , sketchLines,numParallelClasses);
     
     // we keep on seaching till we have currentStepSize 1/100 of initial value
     while(currentSearchStepSize > initialSearchStepSize/100){
@@ -478,13 +480,13 @@ void Model3D::optimizeOnTotalCostGivenSVector(MatrixXf pNull , int numParallelCl
         MatrixXf increaseSvector = updateAndReturnNewSvector(sVector, randomIndexes, currentSearchStepSize, true);
         
         // calculate cost for increase s
-        double increasedVectorCost = getTotalCostForGivenSVector(pNull , increaseSvector , vertices3D , sketchLines);
+        double increasedVectorCost = getTotalCostForGivenSVector(pNull , increaseSvector , vertices3D , sketchLines,numParallelClasses);
         
         
         // now decrease the s vector by step size
         MatrixXf decreasedSVector = updateAndReturnNewSvector(sVector, randomIndexes, currentSearchStepSize, false);
         
-        double decreasedVectorCost = getTotalCostForGivenSVector(pNull , decreasedSVector , vertices3D , sketchLines);
+        double decreasedVectorCost = getTotalCostForGivenSVector(pNull , decreasedSVector , vertices3D , sketchLines,numParallelClasses);
         cout << "Costs----"<<endl;
         cout << increasedVectorCost << endl;
         cout << decreasedVectorCost << endl;
@@ -521,7 +523,7 @@ void Model3D::optimizeOnTotalCostGivenSVector(MatrixXf pNull , int numParallelCl
     
     // now we will update the depths of each vertex
     vector<float> depths;
-    for(int  i = 3 ; i < product.rows() ; i++){
+    for(int  i = numParallelClasses ; i < product.rows() ; i++){
         // these are depths for v2,v3,..... v1 = 0
         depths.push_back(product(i,0));
         cout << product(i,0) << endl;
@@ -543,7 +545,7 @@ void Model3D::optimizeOnTotalCost(MatrixXf pNull , int numParallelClasses){
     // model
     MatrixXf sVector = MatrixXf::Zero(numColumns , 1);
     
-    double previousCost = getTotalCostForGivenSVector(pNull , sVector , vertices3D , sketchLines);
+    double previousCost = getTotalCostForGivenSVector(pNull , sVector , vertices3D , sketchLines,numParallelClasses);
     
     // we keep on seaching till we have currentStepSize 1/100 of initial value
     while(currentSearchStepSize > initialSearchStepSize/100){
@@ -555,13 +557,13 @@ void Model3D::optimizeOnTotalCost(MatrixXf pNull , int numParallelClasses){
         MatrixXf increaseSvector = updateAndReturnNewSvector(sVector, randomIndexes, currentSearchStepSize, true);
         
         // calculate cost for increase s
-        double increasedVectorCost = getTotalCostForGivenSVector(pNull , increaseSvector , vertices3D , sketchLines);
+        double increasedVectorCost = getTotalCostForGivenSVector(pNull , increaseSvector , vertices3D , sketchLines,numParallelClasses);
         
         
         // now decrease the s vector by step size
         MatrixXf decreasedSVector = updateAndReturnNewSvector(sVector, randomIndexes, currentSearchStepSize, false);
         
-        double decreasedVectorCost = getTotalCostForGivenSVector(pNull , decreasedSVector , vertices3D , sketchLines);
+        double decreasedVectorCost = getTotalCostForGivenSVector(pNull , decreasedSVector , vertices3D , sketchLines,numParallelClasses);
         
         //check which configuration recuced the cost
         if(increasedVectorCost < previousCost){
@@ -626,7 +628,7 @@ void Model3D::optimizeOnAngleCost(MatrixXf pNull , int numParallelClasses){
     cout << "**********************************************"<<endl;
     cout << sVector << endl;
     
-    double previousCost = getAngleCostForGivenSVector(pNull , sVector , vertices3D , sketchLines);
+    double previousCost = getAngleCostForGivenSVector(pNull , sVector , vertices3D , sketchLines,numParallelClasses);
     
     // we keep on seaching till we have currentStepSize 1/100 of initial value
     while(currentSearchStepSize > initialSearchStepSize/100){
@@ -641,13 +643,13 @@ void Model3D::optimizeOnAngleCost(MatrixXf pNull , int numParallelClasses){
         
         
         // calculate cost for increase s
-        double increasedVectorCost = getAngleCostForGivenSVector(pNull , increaseSvector , vertices3D , sketchLines);
+        double increasedVectorCost = getAngleCostForGivenSVector(pNull , increaseSvector , vertices3D , sketchLines,numParallelClasses);
         
         
         // now decrease the s vector by step size
         MatrixXf decreasedSVector = updateAndReturnNewSvector(sVector, randomIndexes, currentSearchStepSize, false);
         
-        double decreasedVectorCost = getAngleCostForGivenSVector(pNull , decreasedSVector , vertices3D , sketchLines);
+        double decreasedVectorCost = getAngleCostForGivenSVector(pNull , decreasedSVector , vertices3D , sketchLines,numParallelClasses);
         
         //check which configuration recuced the cost
         if(increasedVectorCost < previousCost){
@@ -679,7 +681,7 @@ void Model3D::optimizeOnAngleCost(MatrixXf pNull , int numParallelClasses){
     
     // now we will update the depths of each vertex
     vector<float> depths;
-    for(int  i = 3 ; i < product.rows() ; i++){
+    for(int  i = numParallelClasses ; i < product.rows() ; i++){
         // these are depths for v2,v3,..... v1 = 0
         depths.push_back(product(i,0));
 //        cout << product(i,0) << endl;
@@ -774,47 +776,47 @@ void Model3D::draw(){
     
     
     
-    glBegin(GL_QUADS);
-//    for(Point3D vertex : vertices3D){
-//        glVertex3f(vertex.x - firstVertex.x, vertex.y - firstVertex.y, vertex.z - firstVertex.z);
-//    }
-    
-    glColor3f(1, 0, 0);
-    glVertex3f(tranformed[0].x, tranformed[0].y, tranformed[0].z);
-    glVertex3f(tranformed[1].x , tranformed[1].y , tranformed[1].z );
-    glVertex3f(tranformed[2].x , tranformed[2].y , tranformed[2].z );
-    glVertex3f(tranformed[3].x , tranformed[3].y , tranformed[3].z );
-    
-    glColor3f(0, 1, 0);
-    glVertex3f(tranformed[2].x , tranformed[2].y , tranformed[2].z);
-    glVertex3f(tranformed[6].x , tranformed[6].y , tranformed[6].z);
-    glVertex3f(tranformed[4].x , tranformed[4].y , tranformed[4].z);
-    glVertex3f(tranformed[3].x , tranformed[3].y , tranformed[3].z);
-    
-    glColor3f(0, 0, 1);
-    glVertex3f(tranformed[0].x , tranformed[0].y , tranformed[0].z);
-    glVertex3f(tranformed[5].x , tranformed[5].y , tranformed[5].z);
-    glVertex3f(tranformed[7].x , tranformed[7].y , tranformed[7].z);
-    glVertex3f(tranformed[1].x , tranformed[1].y , tranformed[1].z);
-    
-    glColor3f(1, 0, 1);
-    glVertex3f(tranformed[6].x , tranformed[6].y , tranformed[6].z);
-    glVertex3f(tranformed[7].x , tranformed[7].y , tranformed[7].z);
-    glVertex3f(tranformed[5].x , tranformed[5].y , tranformed[5].z);
-    glVertex3f(tranformed[4].x , tranformed[4].y , tranformed[4].z);
-    
-    glColor3f(1, 1, 0);
-    glVertex3f(tranformed[0].x , tranformed[0].y , tranformed[0].z);
-    glVertex3f(tranformed[3].x , tranformed[3].y , tranformed[3].z);
-    glVertex3f(tranformed[4].x , tranformed[4].y , tranformed[4].z);
-    glVertex3f(tranformed[5].x , tranformed[5].y , tranformed[5].z);
-    
-    glColor3f(0, 1, 1);
-    glVertex3f(tranformed[1].x , tranformed[1].y , tranformed[1].z);
-    glVertex3f(tranformed[7].x , tranformed[7].y , tranformed[7].z);
-    glVertex3f(tranformed[6].x , tranformed[6].y , tranformed[6].z);
-    glVertex3f(tranformed[2].x , tranformed[2].y , tranformed[2].z);
-    
-    glEnd();
+//    glBegin(GL_QUADS);
+////    for(Point3D vertex : vertices3D){
+////        glVertex3f(vertex.x - firstVertex.x, vertex.y - firstVertex.y, vertex.z - firstVertex.z);
+////    }
+//    
+//    glColor3f(1, 0, 0);
+//    glVertex3f(tranformed[0].x, tranformed[0].y, tranformed[0].z);
+//    glVertex3f(tranformed[1].x , tranformed[1].y , tranformed[1].z );
+//    glVertex3f(tranformed[2].x , tranformed[2].y , tranformed[2].z );
+//    glVertex3f(tranformed[3].x , tranformed[3].y , tranformed[3].z );
+//    
+//    glColor3f(0, 1, 0);
+//    glVertex3f(tranformed[2].x , tranformed[2].y , tranformed[2].z);
+//    glVertex3f(tranformed[6].x , tranformed[6].y , tranformed[6].z);
+//    glVertex3f(tranformed[4].x , tranformed[4].y , tranformed[4].z);
+//    glVertex3f(tranformed[3].x , tranformed[3].y , tranformed[3].z);
+//    
+//    glColor3f(0, 0, 1);
+//    glVertex3f(tranformed[0].x , tranformed[0].y , tranformed[0].z);
+//    glVertex3f(tranformed[5].x , tranformed[5].y , tranformed[5].z);
+//    glVertex3f(tranformed[7].x , tranformed[7].y , tranformed[7].z);
+//    glVertex3f(tranformed[1].x , tranformed[1].y , tranformed[1].z);
+//    
+//    glColor3f(1, 0, 1);
+//    glVertex3f(tranformed[6].x , tranformed[6].y , tranformed[6].z);
+//    glVertex3f(tranformed[7].x , tranformed[7].y , tranformed[7].z);
+//    glVertex3f(tranformed[5].x , tranformed[5].y , tranformed[5].z);
+//    glVertex3f(tranformed[4].x , tranformed[4].y , tranformed[4].z);
+//    
+//    glColor3f(1, 1, 0);
+//    glVertex3f(tranformed[0].x , tranformed[0].y , tranformed[0].z);
+//    glVertex3f(tranformed[3].x , tranformed[3].y , tranformed[3].z);
+//    glVertex3f(tranformed[4].x , tranformed[4].y , tranformed[4].z);
+//    glVertex3f(tranformed[5].x , tranformed[5].y , tranformed[5].z);
+//    
+//    glColor3f(0, 1, 1);
+//    glVertex3f(tranformed[1].x , tranformed[1].y , tranformed[1].z);
+//    glVertex3f(tranformed[7].x , tranformed[7].y , tranformed[7].z);
+//    glVertex3f(tranformed[6].x , tranformed[6].y , tranformed[6].z);
+//    glVertex3f(tranformed[2].x , tranformed[2].y , tranformed[2].z);
+//    
+//    glEnd();
     glLineWidth(1);
 }
