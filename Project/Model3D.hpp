@@ -23,6 +23,7 @@ using namespace Eigen;
 class Line;
 class Point2D;
 class Point3D;
+class Point;
 
 class Model3D{
     
@@ -34,7 +35,11 @@ private:
     // 2d vertices
     vector<Point2D> sketchVertices;
     
+    //3d vertices with real depths
     vector<Point3D> vertices3D;
+    
+    //3d vertices with normalized coordinates
+    vector<Point> _transformedVertices;
     
     double getAngleCostForDegree(int degree);
     
@@ -44,9 +49,9 @@ private:
 public:
     Model3D(vector<Line *> lines , vector<Point2D> vertices);
     
-//    // from the given geometry this method will calculate angle complexity
-//    // Cost
-//    double getAngleCost();
+    //    // from the given geometry this method will calculate angle complexity
+    //    // Cost
+    //    double getAngleCost();
     
     void optimizeOnAngleCost(MatrixXf pNull , int numParallelClasses);
     
@@ -57,6 +62,8 @@ public:
     void optimizeOnTotalCost(MatrixXf pNull , int numParallelClasses);
     
     void draw();
+    
+    void detectFaces();
 };
 
 

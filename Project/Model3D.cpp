@@ -32,6 +32,39 @@ public:
     }
 };
 
+class Plane {
+public:
+    int xCoeff;
+    int yCoeff;
+    int zCoeff;
+    int constant;
+    
+    Plane(int _x , int _y , int _z , int _c){
+        xCoeff = _x;
+        yCoeff = _y;
+        zCoeff = _z;
+        constant = _c;
+    }
+    
+    int getPointPositionRelToPlane(int x , int y , int z){
+        int sum = xCoeff * x + yCoeff*y + zCoeff*z + constant;
+        
+        if( sum < 10 && sum > -10 ){
+            return 0;
+        }else if(sum > 10){
+            return 1;
+        }else{
+            return -1;
+        }
+    }
+    
+    double getDistanceFromPlane(int x , int y , int z){
+        double dotProduct = xCoeff * x + yCoeff * y + zCoeff + z + constant;
+        double denominator = sqrt( pow(xCoeff , 2) + pow(yCoeff , 2) + pow(zCoeff , 2) );
+        return dotProduct / denominator;
+    }
+};
+
 
 void drawText(void *font,const char *text,double x,double y,double z)
 {
@@ -774,7 +807,21 @@ void Model3D::draw(){
         
     }
     
+    glColor3f(0, 1, 0);
+    glBegin(GL_LINES);
     
+    for(Line * line : sketchLines){
+        int vertex1Id = line->getVertex1Id();
+        int vertex2Id = line->getVertex2Id();
+        
+        Point vertex1 = tranformed[vertex1Id-1];
+        Point vertex2 = tranformed[vertex2Id-1];
+        
+        glVertex3f( vertex1.x, vertex1.y, vertex1.z);
+        glVertex3f( vertex2.x, vertex2.y, vertex2.z);
+    }
+    
+    glEnd();
     
 //    glBegin(GL_QUADS);
 ////    for(Point3D vertex : vertices3D){
@@ -819,4 +866,76 @@ void Model3D::draw(){
 //    
 //    glEnd();
     glLineWidth(1);
+}
+
+
+vector<vector<Line *>> getVertexToLineMapping(vector<Line * > lines , vector<Point3D> vertices){
+    vector<vector<Line *>> result;
+    
+    for (int i = 0 ; i < vertices.size() ; i++){
+        int vertexId = i + 1;
+        vector<Line *> linesForCurrVertex;
+        for (Line *line : lines){
+            if(line->getVertex1Id() == vertexId || line->getVertex2Id() == vertexId){
+                linesForCurrVertex.push_back(line);
+            }
+        }
+        result.push_back(linesForCurrVertex);
+    }
+    return result;
+}
+
+// given a sketch line figure out the line equation in 3d
+Point3D get3DLineVector(Line * sketchLine , vector<Point3D> vertices3D){
+    int vertex1Id = sketchLine->getVertex1Id();
+    int vertex2Id = sketchLine->getVertex2Id();
+    
+    Point3D vertex1 = vertices3D[vertex1Id - 1];
+    Point3D vertex2 = vertices3D[vertex2Id - 1];
+    
+    Point3D line{vertex2.x - vertex1.x , vertex2.y - vertex1.y , vertex2.z - vertex1.z};
+    return line;
+}
+
+Point3D computeCrossProduct(Point3D vector1 , Point3D vector2){
+    Point3D crossProduct{0,0,0};
+    crossProduct.x = vector1.y * vector2.z - vector1.z * vector2.y;
+    crossProduct.y = vector1.z - vector2.x - vector1.x * vector2.z;
+    crossProduct.z = vector1.x * vector2.y - vector1.y * vector2.x;
+    return crossProduct;
+}
+
+Plane getPlane(Point3D normal , Point3D point){
+    
+    // a(X-x) + b(Y-y) + c(Z-z) = 0;
+    // c = -ax -by - cz
+    
+    int constant = -1 * (normal.x * point.x + normal.y * point.y + normal.z * point.z);
+    
+    Plane plane{normal.x , normal.y , normal.z , constant};
+    return plane;
+}
+
+void Model3D::detectFaces(){
+    // for 1st vertex
+    vector<vector<Line *>> vertexToLineMap = getVertexToLineMapping(sketchLines , vertices3D);
+    
+    vector<Line*> linesForVertex = vertexToLineMap.at(0);
+    
+    // pick 1st and 2nd line
+    // 1st line is formed by 2 vertices
+    Point3D line1 = get3DLineVector(linesForVertex[0] , vertices3D);
+    
+    // 2nd line
+    Point3D line2 = get3DLineVector(linesForVertex[1] , vertices3D);
+    
+    Point3D normalVector = computeCrossProduct(line1 , line2);
+    
+    Plane plane = getPlane(normalVector, vertices3D[0]);
+    
+    vector<double> distances;
+    for (Point3D vertex : vertices3D){
+        distances.push_back(plane.getDistanceFromPlane(vertex.x, vertex.y, vertex.z));
+    }
+    
 }
