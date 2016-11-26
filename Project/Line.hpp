@@ -14,6 +14,7 @@
 #include "DrawableObject.hpp"
 #include "Point2D.hpp"
 
+class Curve2D;
 class Line : public DrawableObject{
     
 private:
@@ -27,6 +28,11 @@ private:
     
     /* 1 indexed ids assinged to each vertex in the graph */
     int _vertex1Id = -1 , _vertex2Id = -1;
+    
+    
+    /* will be set for the lines which were relacements for curves during pre processing */
+    bool _isProxy = false;
+    Curve2D *originalCurve;
     
 public:
     Line(){
@@ -49,6 +55,18 @@ public:
         _endX = endX;
         _endY = endY;
     }
+    
+    // this constructor will be used to create proxy lines
+    Line(int startX , int startY , int endX , int endY , Curve2D *curve){
+        
+        _startX = startX;
+        _startY = startY;
+        _endX = endX;
+        _endY = endY;
+        originalCurve = curve;
+        _isProxy = true;
+    }
+    
     
     int vertex1Corrected(){
         return _isVertex1Corrected;
@@ -100,6 +118,14 @@ public:
     
     int getParallelClassNum(){
         return _classNum;
+    }
+    
+    bool isProxy(){
+        return _isProxy;
+    }
+    
+    Curve2D *getOriginalCurve(){
+        return originalCurve;
     }
     
     void draw();

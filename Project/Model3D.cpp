@@ -15,22 +15,15 @@
 #include<math.h>
 #include <algorithm>
 #include<GLUT/GLUT.h>
+#include "Point.h"
+#include "Curve2D.hpp"
+#include "Curve3D.hpp"
 
 using namespace Eigen;
 
 #define PI 3.14159265
+vector<Point> warpModel(vector<Point3D> vertices3D);
 
-class Point{
-public:
-    double x=0;
-    double y = 0;
-    double z = 0;
-    Point(double _x , double _y , double _z){
-        x = _x;
-        y = _y;
-        z = _z;
-    }
-};
 
 class Plane {
 public:
@@ -65,6 +58,14 @@ public:
     }
 };
 
+
+Point computeCrossProduct(Point vector1 , Point vector2){
+    Point crossProduct{0,0,0};
+    crossProduct.x = vector1.y * vector2.z - vector1.z * vector2.y;
+    crossProduct.y = vector1.z * vector2.x - vector1.x * vector2.z;
+    crossProduct.z = vector1.x * vector2.y - vector1.y * vector2.x;
+    return crossProduct;
+}
 
 void drawText(void *font,const char *text,double x,double y,double z)
 {
@@ -727,11 +728,7 @@ void Model3D::optimizeOnAngleCost(MatrixXf pNull , int numParallelClasses){
     optimizeOnTotalCostGivenSVector(pNull, numParallelClasses, sVector);
 }
 
-
-void Model3D::draw(){
-    
-    Point3D firstVertex{0,0,0};
-    
+vector<Point> warpModel(vector<Point3D> vertices3D , vector<Curve3D*> curves){
     int maxX = INT_MIN;
     int maxY = INT_MIN;
     int maxZ = INT_MIN;
@@ -774,7 +771,7 @@ void Model3D::draw(){
     double aspect = rangeY / rangeX;
     
     // now we will warp our object between 0 to 5 in x , 0 to 5 , 0 to 5 in z
-
+    
     
     vector<Point> tranformed;
     
@@ -791,11 +788,165 @@ void Model3D::draw(){
         }
         
         Point transPoint{transformedX , transformedY , transformedZ};
-//        Point transPoint{static_cast<double>(vertex.x) , static_cast<double>(vertex.y) , static_cast<double>(vertex.z)};
+        //        Point transPoint{static_cast<double>(vertex.x) , static_cast<double>(vertex.y) , static_cast<double>(vertex.z)};
         tranformed.push_back(transPoint);
         index ++ ;
     }
     
+    for(Curve3D * curve : curves){
+        curve->warpCurve(minX, minY, minZ, rangeX, rangeY, rangeZ);
+    }
+    return tranformed;
+}
+
+void Model3D::reconstructCurves(){
+    vector<Line *> proxyLines;
+    for(Line * line : sketchLines){
+        if(line->isProxy()){
+            proxyLines.push_back(line);
+        }
+    }
+    
+    // for each of proxy lines there will be a curve which we need to
+    // reconstruct
+    _reconstructedCurves.empty();
+    for(Line *proxy:proxyLines){
+        Curve3D* curve = reconstructSingleCurve(proxy);
+        int vertex1Id = proxy->getVertex1Id();
+        int vertex2Id = proxy->getVertex2Id();
+        
+        Point3D vertex1 = vertices3D[vertex1Id-1];
+        Point3D vertex2 = vertices3D[vertex2Id-1];
+        
+        Point v1{vertex1};
+        Point v2{vertex2};
+        
+        curve->addEndpoints(v1 , v2);
+        _reconstructedCurves.push_back(curve);
+    }
+}
+
+Point getNormalVector(Point vectorA , Point vectorW , int angle){
+    //n = ||a||( x1 * a + x2 * w)
+    //x2 = sin(theta)/|w|
+    //x1 = cos(theta)/|a|
+    
+    double modA = pow(vectorA.x , 2) + pow(vectorA.y,2) + pow(vectorA.z , 2);
+    modA = sqrt(modA);
+    
+    double modW = pow(vectorW.x , 2) + pow(vectorW.y , 2) + pow(vectorW.z , 2);
+    modW = sqrt(modW);
+    
+    double angleInRad = angle*PI/180;
+    double x2 = sin(angleInRad) / modW;
+    double x1 = cos(angleInRad) / modA;
+    
+    Point normalVector{0,0,0};
+    normalVector.x = modA * (x1 * vectorA.x + x2 * vectorW.x);
+    normalVector.y = modA * (x1 * vectorA.y + x2 * vectorW.y);
+    normalVector.z = modA * (x1 * vectorA.z + x2 * vectorW.z);
+    
+    return normalVector;
+}
+
+/**
+    This function will take in all sample points of curve and original normal vector and angle of rotation 
+    and returns a single scalar value rpresenting cost
+    implementation details in paper
+ */
+double getCostForGivenPlane(Point normalVector , Point2D endPoint1 , Point2D endPoint2 , vector<Point2D> samplePoints){
+    double cost = 0;
+    for (Point2D point : samplePoints){
+        double firstTerm = normalVector.x * (point.x - endPoint1.x) + normalVector.y * (point.y - endPoint1.y);
+        firstTerm = firstTerm / normalVector.z;
+        firstTerm = pow(firstTerm , 2);
+        
+        double secondTerm = normalVector.x * (point.x - endPoint2.x) + normalVector.y * (point.y - endPoint2.y);
+        secondTerm = secondTerm / normalVector.z;
+        secondTerm = pow(secondTerm , 2);
+        
+        cost += firstTerm + secondTerm;
+    }
+    
+    return cost;
+}
+
+vector<Point> reconstructSamplePointsOfCurve(Point normalVector , Point3D pointOnPlane , vector<Point2D> samplePoints){
+    vector<Point> reconstructedPoints;
+    
+    for (Point2D point : samplePoints){
+        double rhs = normalVector.x * (point.x - pointOnPlane.x) + normalVector.y * (point.y - pointOnPlane.y);
+        rhs = -1 * rhs;
+        rhs = rhs / normalVector.z;
+        double z = rhs + pointOnPlane.z;
+        Point reconPoint{double(point.x) , double(point.y) , z};
+        reconstructedPoints.push_back(reconPoint);
+    }
+    
+    return reconstructedPoints;
+}
+
+
+Curve3D* Model3D::reconstructSingleCurve(Line *line){
+    
+    Curve2D * originalCurve = line->getOriginalCurve();
+    
+    int vertex1Id = line->getVertex1Id();
+    int vertex2Id = line->getVertex2Id();
+    
+    Point3D vertex1 = vertices3D[vertex1Id-1];
+    Point3D vertex2 = vertices3D[vertex2Id-1];
+    double x , y , z;
+    
+    x = vertex1.x + 1;
+    y = vertex1.y + 1;
+    
+    
+    // equation of normal line will satisfy following equation
+    //(vertex1.z - vertex2.z)*(z - vertex1.z)
+    double rhs = -1 * (vertex1.x - vertex2.x)*(x - vertex1.x) + (vertex1.y - vertex2.y)*(y-vertex1.y);
+    rhs = rhs / (vertex1.z - vertex2.z);
+    z = rhs + vertex1.z;
+    
+    //http://math.stackexchange.com/questions/511370/how-to-rotate-one-vector-about-another
+    // we have a vector ie the arbit vector we chose , b is the vector joining the two points
+    // we have two perpendcular vectors
+    Point a{ double(x - vertex1.x) , double(y - vertex1.y) , double(z - vertex1.z)};
+    Point b{ double(vertex2.x - vertex1.x) , double(vertex2.y - vertex1.y) , double(vertex2.z - vertex1.z)};
+    
+    Point w = computeCrossProduct(b, a);
+    
+    //using the above we can compute normal as a fucntion of theta
+    vector<Point2D> samplePoints = originalCurve->getSamplePoints();
+    double minCost = MAXFLOAT;
+    int bestAngle = -1;
+    
+    // now we will reconstruct these sample points
+    for (int angle = 0 ; angle < 180 ; angle++){
+        Point normal = getNormalVector(a, w, angle);
+        double cost = getCostForGivenPlane(normal, line->getVertex1(), line->getVertex2(), samplePoints);
+        
+        if(cost < minCost){
+            minCost = cost;
+            bestAngle = angle;
+        }
+    }
+    
+    cout << "Best Angle--"<<bestAngle << endl;
+    Point bestNormal = getNormalVector(a, w, bestAngle);
+    // with this normal and a point we can form a plane we want
+    // using that plane we can reconstruct all sample points
+    vector<Point> reconstructedPoints = reconstructSamplePointsOfCurve(bestNormal, vertex1, samplePoints);
+    Curve3D* curve3D = new Curve3D(reconstructedPoints);
+    return curve3D;
+}
+
+void Model3D::draw(){
+    
+    Point3D firstVertex{0,0,0};
+    
+    _transformedVertices = warpModel(vertices3D , _reconstructedCurves);
+    vector<Point> tranformed = _transformedVertices;
     glLineWidth(3);
     glColor3f(1, 0, 0);
     
@@ -810,7 +961,13 @@ void Model3D::draw(){
     glColor3f(0, 1, 0);
     glBegin(GL_LINES);
     
+    
     for(Line * line : sketchLines){
+        
+        if(line -> isProxy()){
+//            proxyLines.push_back(line);
+            continue;
+        }
         int vertex1Id = line->getVertex1Id();
         int vertex2Id = line->getVertex2Id();
         
@@ -822,50 +979,11 @@ void Model3D::draw(){
     }
     
     glEnd();
-    
-//    glBegin(GL_QUADS);
-////    for(Point3D vertex : vertices3D){
-////        glVertex3f(vertex.x - firstVertex.x, vertex.y - firstVertex.y, vertex.z - firstVertex.z);
-////    }
-//    
-//    glColor3f(1, 0, 0);
-//    glVertex3f(tranformed[0].x, tranformed[0].y, tranformed[0].z);
-//    glVertex3f(tranformed[1].x , tranformed[1].y , tranformed[1].z );
-//    glVertex3f(tranformed[2].x , tranformed[2].y , tranformed[2].z );
-//    glVertex3f(tranformed[3].x , tranformed[3].y , tranformed[3].z );
-//    
-//    glColor3f(0, 1, 0);
-//    glVertex3f(tranformed[2].x , tranformed[2].y , tranformed[2].z);
-//    glVertex3f(tranformed[6].x , tranformed[6].y , tranformed[6].z);
-//    glVertex3f(tranformed[4].x , tranformed[4].y , tranformed[4].z);
-//    glVertex3f(tranformed[3].x , tranformed[3].y , tranformed[3].z);
-//    
-//    glColor3f(0, 0, 1);
-//    glVertex3f(tranformed[0].x , tranformed[0].y , tranformed[0].z);
-//    glVertex3f(tranformed[5].x , tranformed[5].y , tranformed[5].z);
-//    glVertex3f(tranformed[7].x , tranformed[7].y , tranformed[7].z);
-//    glVertex3f(tranformed[1].x , tranformed[1].y , tranformed[1].z);
-//    
-//    glColor3f(1, 0, 1);
-//    glVertex3f(tranformed[6].x , tranformed[6].y , tranformed[6].z);
-//    glVertex3f(tranformed[7].x , tranformed[7].y , tranformed[7].z);
-//    glVertex3f(tranformed[5].x , tranformed[5].y , tranformed[5].z);
-//    glVertex3f(tranformed[4].x , tranformed[4].y , tranformed[4].z);
-//    
-//    glColor3f(1, 1, 0);
-//    glVertex3f(tranformed[0].x , tranformed[0].y , tranformed[0].z);
-//    glVertex3f(tranformed[3].x , tranformed[3].y , tranformed[3].z);
-//    glVertex3f(tranformed[4].x , tranformed[4].y , tranformed[4].z);
-//    glVertex3f(tranformed[5].x , tranformed[5].y , tranformed[5].z);
-//    
-//    glColor3f(0, 1, 1);
-//    glVertex3f(tranformed[1].x , tranformed[1].y , tranformed[1].z);
-//    glVertex3f(tranformed[7].x , tranformed[7].y , tranformed[7].z);
-//    glVertex3f(tranformed[6].x , tranformed[6].y , tranformed[6].z);
-//    glVertex3f(tranformed[2].x , tranformed[2].y , tranformed[2].z);
-//    
-//    glEnd();
     glLineWidth(1);
+    
+    for (Curve3D* curve : _reconstructedCurves){
+        curve->draw();
+    }
 }
 
 
@@ -897,13 +1015,7 @@ Point3D get3DLineVector(Line * sketchLine , vector<Point3D> vertices3D){
     return line;
 }
 
-Point3D computeCrossProduct(Point3D vector1 , Point3D vector2){
-    Point3D crossProduct{0,0,0};
-    crossProduct.x = vector1.y * vector2.z - vector1.z * vector2.y;
-    crossProduct.y = vector1.z - vector2.x - vector1.x * vector2.z;
-    crossProduct.z = vector1.x * vector2.y - vector1.y * vector2.x;
-    return crossProduct;
-}
+
 
 Plane getPlane(Point3D normal , Point3D point){
     
@@ -929,13 +1041,13 @@ void Model3D::detectFaces(){
     // 2nd line
     Point3D line2 = get3DLineVector(linesForVertex[1] , vertices3D);
     
-    Point3D normalVector = computeCrossProduct(line1 , line2);
-    
-    Plane plane = getPlane(normalVector, vertices3D[0]);
-    
-    vector<double> distances;
-    for (Point3D vertex : vertices3D){
-        distances.push_back(plane.getDistanceFromPlane(vertex.x, vertex.y, vertex.z));
-    }
+//    Point3D normalVector = computeCrossProduct(line1 , line2);
+//    
+//    Plane plane = getPlane(normalVector, vertices3D[0]);
+//    
+//    vector<double> distances;
+//    for (Point3D vertex : vertices3D){
+//        distances.push_back(plane.getDistanceFromPlane(vertex.x, vertex.y, vertex.z));
+//    }
     
 }

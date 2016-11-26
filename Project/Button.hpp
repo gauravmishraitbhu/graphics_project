@@ -72,6 +72,9 @@ public:
         _state = state;
     }
     
+    void updateLabel(const char *label){
+        _label = label;
+    }
     
     void setHighlighted(int highlight);
     

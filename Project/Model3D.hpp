@@ -24,6 +24,7 @@ class Line;
 class Point2D;
 class Point3D;
 class Point;
+class Curve3D;
 
 class Model3D{
     
@@ -40,11 +41,13 @@ private:
     
     //3d vertices with normalized coordinates
     vector<Point> _transformedVertices;
+    vector<Curve3D *> _reconstructedCurves;
     
     double getAngleCostForDegree(int degree);
     
     MatrixXf _sVector;
     bool optmizationDone = false;
+    Curve3D* reconstructSingleCurve(Line *line);
     
 public:
     Model3D(vector<Line *> lines , vector<Point2D> vertices);
@@ -64,6 +67,8 @@ public:
     void draw();
     
     void detectFaces();
+    
+    void reconstructCurves();
 };
 
 

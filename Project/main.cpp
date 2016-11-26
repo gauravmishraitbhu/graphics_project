@@ -16,6 +16,7 @@
 #include "PMatrix.hpp"
 #include "Point3D.hpp"
 #include "Model3D.hpp"
+#include "Curve2D.hpp"
 using namespace std;
 
 
@@ -46,10 +47,11 @@ vector <Button * > buttons;
 vector<Point2D> verticesIds;
 
 Line *currentLine;
+Curve2D *currentCurve;
 
 PMatrix* matrix;
 Model3D * model3d;
-
+Button *_toggleDrawModeBtn;
 
 int numParallelClasses = 0;
 
@@ -174,7 +176,7 @@ void draw3D()
     glTranslatef(viewTransform.tx,viewTransform.ty,0);
     glRotatef(viewTransform.xRotation,1,0,0);
     glRotatef(viewTransform.yRotation,0,1,0);
-    glColor3f(0, 0, 0);
+    glColor4f(0, 0, 0 ,0.2);
     glLineWidth(0.5);
     glBegin(GL_LINES);
     for(int i=-10;i<=10;++i) {
@@ -251,6 +253,10 @@ void draw2D()
         currentLine->draw();
     }
     
+    if(currentCurve != NULL){
+        currentCurve->draw();
+    }
+    
     for (Button *btn : buttons){
         btn->draw();
     }
@@ -284,6 +290,8 @@ void draw (void)
          */
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_LIGHTING);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         
         /*
          *	Set perspective viewing transformation
@@ -354,6 +362,17 @@ void startLineDraw(int x , int y){
     currentLine = new Line(x , y , x , y);
 }
 
+void extendCurrentCurve(int x , int y){
+    if(currentCurve){
+        currentCurve->extendCurve(x,y);
+    }
+}
+
+void startCurveDraw(int x , int y){
+    cout << "Creating a new curve" << endl;
+    currentCurve = new Curve2D(x , y);
+}
+
 
 /*
  Will be called when user releases mouse. this method will add the current line to list of lines and
@@ -375,13 +394,61 @@ void commitCurrentLine(){
     
 }
 
+void commitCurrentCurve(){
+    
+    if(currentCurve != NULL){
+        
+        if(currentCurve->getLength() > 5){
+            drawableObjects.push_back(currentCurve);
+        }else{
+            cout << "ignoring a curve which was less than 5 " << endl;
+        }
+        
+        currentCurve = NULL;
+    }
+    
+    
+}
+
+
 /********************************************************************************************************************************
                                 Button Related Methods
  *******************************************************************************************************************************/
+void replaceCurvesWithProxyLines(){
+    
+    vector<Curve2D *> curves;
+    vector<int> indexesToRemove;
+    int currIndex=-1;
+    for(DrawableObject *obj:drawableObjects){
+        currIndex ++;
+        if(obj->getObjectType() == OBJECT_TYPE_CURVE){
+            curves.push_back((Curve2D*)obj);
+            indexesToRemove.push_back(currIndex);
+        }
+    }
+    
+    // remove curve lines from drawable object list
+    // we will replace these with proxy lines
+    
+    for(int index:indexesToRemove){
+        drawableObjects.erase(drawableObjects.begin() + index);
+    }
+    
+    for(Curve2D *curve:curves){
+        Point2D startPoint = curve->getCurveStartPoint();
+        Point2D endPoint = curve->getCurveEndPoint();
+        Line *proxyLine = new Line(startPoint.x , startPoint.y , endPoint.x , endPoint.y , curve);
+        drawableObjects.push_back(proxyLine);
+    }
+}
+
 
 void detectParallelLinesClass(){
     cout << "detectParallelLinesClass" << endl;
     vector<Line *> lines;
+    
+    replaceCurvesWithProxyLines();
+    
     for (DrawableObject *obj : drawableObjects){
         if(obj->getObjectType() == OBJECT_TYPE_LINE){
             lines.push_back((Line *)obj);
@@ -400,11 +467,23 @@ void detectParallelLinesClass(){
     glutPostRedisplay();
 }
 
+void toggleDrawModes(){
+    if(UIMode == UI_MODE_LINE){
+        UIMode = UI_MODE_FREEHAND;
+        _toggleDrawModeBtn->updateLabel("Draw Line");
+    }else{
+        UIMode = UI_MODE_LINE;
+        _toggleDrawModeBtn->updateLabel("Draw Curve");
+    }
+    glutPostRedisplay();
+}
+
 void eraseAll(){
     cout << "erasing all lines" << endl;
     drawableObjects.clear();
     verticesIds.clear();
     currentLine = NULL;
+    currentCurve = NULL;
     glutPostRedisplay();
 }
 
@@ -444,6 +523,7 @@ void runOptmimationAlgorithm(){
     
     MatrixXf pNull = matrix->getPNullMatrix();
     model3d->optimizeOnAngleCost(pNull , numParallelClasses);
+    model3d->reconstructCurves();
 //    model3d->optimizeOnTotalCost(pNull, numParallelClasses);
 }
 
@@ -457,10 +537,11 @@ void render3dModel(){
 
 void initButtons(){
     int x = 10;
-    int width = 110;
-    int height = 30;
+    int width = 90;
+    int height = 25;
     int y = 10;
-    int padding = 15;
+    int padding = 12;
+    
     
     Button *removeAllBtn = new Button("Erase All" , x,y,width,height);
     buttons.push_back(removeAllBtn);
@@ -468,6 +549,11 @@ void initButtons(){
     
     x += width + padding;
 
+    Button *toggleDrawModeBtn = new Button("Draw Curve" , x , y , width , height);
+    buttons.push_back(toggleDrawModeBtn);
+    toggleDrawModeBtn->addClickCallback(toggleDrawModes);
+    _toggleDrawModeBtn = toggleDrawModeBtn;
+    x += width + padding;
     
     Button *detectParallelClassBtn  = new Button("Detect" , x,y,width,height);
     buttons.push_back(detectParallelClassBtn);
@@ -493,6 +579,8 @@ void initButtons(){
     renderBtn->addClickCallback(render3dModel);
     
     x += width + padding;
+    
+    
 }
 
 /*
@@ -617,6 +705,10 @@ void mouseClicked(int button , int state , int x , int y){
                     if(UIMode == UI_MODE_LINE){
                         startLineDraw(x, y);
                     }
+                    
+                    if(UIMode == UI_MODE_FREEHAND){
+                        startCurveDraw(x, y);
+                    }
                 }
                 
                 break;
@@ -636,6 +728,10 @@ void mouseClicked(int button , int state , int x , int y){
                 // delete the current curve or line
                 if(UIMode == UI_MODE_LINE){
                     commitCurrentLine();
+                }
+                
+                if(UIMode == UI_MODE_FREEHAND){
+                    commitCurrentCurve();
                 }
 
                 break;
@@ -666,6 +762,9 @@ void mouseMove(int x , int y){
     switch (UIMode) {
         case UI_MODE_LINE:
             updateCurrentLine(x, y);
+            break;
+        case UI_MODE_FREEHAND:
+            extendCurrentCurve(x, y);
             break;
         case UI_3D_RENDER:
             viewTransform.xRotation += (float) 0.5f * dy;
@@ -702,33 +801,33 @@ void mousePassiveMotion(int x , int y){
 }
 
 void addStartSketch(){
-    drawableObjects.push_back(new Line(147,166,147,320));
-    drawableObjects.push_back(new Line(147,320,309,320));
-    drawableObjects.push_back(new Line(310,167,309,320));
-    drawableObjects.push_back(new Line(147,166,310,167));
-    drawableObjects.push_back(new Line(310,167,365,120));
-    drawableObjects.push_back(new Line(147,166,209,112));
-    drawableObjects.push_back(new Line(209,112,365,120));
-    drawableObjects.push_back(new Line(365,120,362,261));
-    drawableObjects.push_back(new Line(362,261,309,320));
-    drawableObjects.push_back(new Line(201,259,147,320));
-    drawableObjects.push_back(new Line(209,112,201,259));
-    drawableObjects.push_back(new Line(201,259,362,261));
+//    drawableObjects.push_back(new Line(147,166,147,320));
+//    drawableObjects.push_back(new Line(147,320,309,320));
+//    drawableObjects.push_back(new Line(310,167,309,320));
+//    drawableObjects.push_back(new Line(147,166,310,167));
+//    drawableObjects.push_back(new Line(310,167,365,120));
+//    drawableObjects.push_back(new Line(147,166,209,112));
+//    drawableObjects.push_back(new Line(209,112,365,120));
+//    drawableObjects.push_back(new Line(365,120,362,261));
+//    drawableObjects.push_back(new Line(362,261,309,320));
+//    drawableObjects.push_back(new Line(201,259,147,320));
+//    drawableObjects.push_back(new Line(209,112,201,259));
+//    drawableObjects.push_back(new Line(201,259,362,261));
     
     
     
     // prism
-//    drawableObjects.push_back(new Line(162,235,104,346));
-//    drawableObjects.push_back(new Line(162,235,217,346));
-//    
-//    drawableObjects.push_back(new Line(104,346,217,346));
-//    drawableObjects.push_back(new Line(162,235,371,187));
-//    
-//    drawableObjects.push_back(new Line(371,187,323,292));
-//    drawableObjects.push_back(new Line(323,292,431,292));
-//    drawableObjects.push_back(new Line(371,187,431,292));
-//    drawableObjects.push_back(new Line(217,345,431,292));
-//    drawableObjects.push_back(new Line(104,346,323,292));
+    drawableObjects.push_back(new Line(162,235,104,346));
+    drawableObjects.push_back(new Line(162,235,217,346));
+    
+    drawableObjects.push_back(new Line(104,346,217,346));
+    //drawableObjects.push_back(new Line(162,235,371,187));
+    
+    drawableObjects.push_back(new Line(371,187,323,292));
+    drawableObjects.push_back(new Line(323,292,431,292));
+    drawableObjects.push_back(new Line(371,187,431,292));
+    drawableObjects.push_back(new Line(217,345,431,292));
+    drawableObjects.push_back(new Line(104,346,323,292));
     
 }
 
