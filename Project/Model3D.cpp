@@ -812,6 +812,7 @@ void Model3D::reconstructCurves(){
     _reconstructedCurves.empty();
     for(Line *proxy:proxyLines){
         Curve3D* curve = reconstructSingleCurve(proxy);
+        proxy->setReconstructedCurve(curve);
         int vertex1Id = proxy->getVertex1Id();
         int vertex2Id = proxy->getVertex2Id();
         
@@ -917,7 +918,7 @@ Curve3D* Model3D::reconstructSingleCurve(Line *line){
     Point w = computeCrossProduct(b, a);
     
     //using the above we can compute normal as a fucntion of theta
-    vector<Point2D> samplePoints = originalCurve->getSamplePoints();
+    vector<Point2D> samplePoints = originalCurve->getSamplePoints(line);
     double minCost = MAXFLOAT;
     int bestAngle = -1;
     
@@ -1049,5 +1050,22 @@ void Model3D::detectFaces(){
 //    for (Point3D vertex : vertices3D){
 //        distances.push_back(plane.getDistanceFromPlane(vertex.x, vertex.y, vertex.z));
 //    }
+    
+}
+
+void Model3D::constructFaces(){
+    // 1-4 6-5 - u curves   1-6 4-5 - v lines
+    
+    // find the proxy line which represents 1,4 curve
+    for(Line *line : sketchLines){
+        if(line->isProxy() && line->getVertex1Id() == 1 && line->getVertex2Id() == 4){
+            cout << "found 1 curve\n";
+            Curve3D * curve1 = line->getReconstructedCurve();
+        }
+        
+        if(line->isProxy() && line->getVertex1Id() == 6 && line->getVertex2Id() == 5){
+            cout << "fiudn 2 curve\n";
+        }
+    }
     
 }

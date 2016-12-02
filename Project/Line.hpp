@@ -15,6 +15,7 @@
 #include "Point2D.hpp"
 
 class Curve2D;
+class Curve3D;
 class Line : public DrawableObject{
     
 private:
@@ -33,6 +34,7 @@ private:
     /* will be set for the lines which were relacements for curves during pre processing */
     bool _isProxy = false;
     Curve2D *originalCurve;
+    Curve3D *reconstructedCurve;
     
 public:
     Line(){
@@ -126,6 +128,14 @@ public:
     
     Curve2D *getOriginalCurve(){
         return originalCurve;
+    }
+    
+    void setReconstructedCurve(Curve3D *curve){
+        reconstructedCurve = curve;
+    }
+    
+    Curve3D *getReconstructedCurve(){
+        return reconstructedCurve;
     }
     
     void draw();

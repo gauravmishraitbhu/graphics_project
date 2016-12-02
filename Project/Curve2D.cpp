@@ -84,13 +84,14 @@ double getDistance(Point2D a , Point2D b){
     return sqrt(distance);
 }
 
-vector<Point2D> Curve2D::getSamplePoints(){
+vector<Point2D> Curve2D::getSamplePoints(Line *proxyLine){
     
     // return all points if less that 10 points
     if(_points.size() < 10){
         return _points;
     }
 
+    
     vector<Point2D> samples;
     
     // dont include first and last vertex since they will be added using proxy line

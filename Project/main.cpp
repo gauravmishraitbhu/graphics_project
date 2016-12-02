@@ -419,19 +419,24 @@ void replaceCurvesWithProxyLines(){
     vector<Curve2D *> curves;
     vector<int> indexesToRemove;
     int currIndex=-1;
+    vector<DrawableObject*> newList;
     for(DrawableObject *obj:drawableObjects){
         currIndex ++;
+        
+        //we keep only the lines in new list
+        
         if(obj->getObjectType() == OBJECT_TYPE_CURVE){
             curves.push_back((Curve2D*)obj);
             indexesToRemove.push_back(currIndex);
+        }else{
+            newList.push_back(obj);
         }
     }
     
-    // remove curve lines from drawable object list
-    // we will replace these with proxy lines
-    
-    for(int index:indexesToRemove){
-        drawableObjects.erase(drawableObjects.begin() + index);
+    //clear the old list and add just the lines
+    drawableObjects.clear();
+    for (DrawableObject *obj : newList){
+        drawableObjects.push_back(obj);
     }
     
     for(Curve2D *curve:curves){
@@ -524,6 +529,7 @@ void runOptmimationAlgorithm(){
     MatrixXf pNull = matrix->getPNullMatrix();
     model3d->optimizeOnAngleCost(pNull , numParallelClasses);
     model3d->reconstructCurves();
+    model3d->constructFaces();
 //    model3d->optimizeOnTotalCost(pNull, numParallelClasses);
 }
 
@@ -801,33 +807,33 @@ void mousePassiveMotion(int x , int y){
 }
 
 void addStartSketch(){
-//    drawableObjects.push_back(new Line(147,166,147,320));
-//    drawableObjects.push_back(new Line(147,320,309,320));
-//    drawableObjects.push_back(new Line(310,167,309,320));
-//    drawableObjects.push_back(new Line(147,166,310,167));
-//    drawableObjects.push_back(new Line(310,167,365,120));
-//    drawableObjects.push_back(new Line(147,166,209,112));
-//    drawableObjects.push_back(new Line(209,112,365,120));
-//    drawableObjects.push_back(new Line(365,120,362,261));
-//    drawableObjects.push_back(new Line(362,261,309,320));
-//    drawableObjects.push_back(new Line(201,259,147,320));
-//    drawableObjects.push_back(new Line(209,112,201,259));
-//    drawableObjects.push_back(new Line(201,259,362,261));
+    drawableObjects.push_back(new Line(147,166,147,320));
+    drawableObjects.push_back(new Line(147,320,309,320));
+    drawableObjects.push_back(new Line(310,167,309,320));
+    //drawableObjects.push_back(new Line(147,166,310,167)); //remove this
+    drawableObjects.push_back(new Line(310,167,365,120));
+    drawableObjects.push_back(new Line(147,166,209,112));
+    //drawableObjects.push_back(new Line(209,112,365,120)); // remove this
+    drawableObjects.push_back(new Line(365,120,362,261));
+    drawableObjects.push_back(new Line(362,261,309,320));
+    drawableObjects.push_back(new Line(201,259,147,320));
+    drawableObjects.push_back(new Line(209,112,201,259));
+    drawableObjects.push_back(new Line(201,259,362,261));
     
     
     
     // prism
-    drawableObjects.push_back(new Line(162,235,104,346));
-    drawableObjects.push_back(new Line(162,235,217,346));
-    
-    drawableObjects.push_back(new Line(104,346,217,346));
-    //drawableObjects.push_back(new Line(162,235,371,187));
-    
-    drawableObjects.push_back(new Line(371,187,323,292));
-    drawableObjects.push_back(new Line(323,292,431,292));
-    drawableObjects.push_back(new Line(371,187,431,292));
-    drawableObjects.push_back(new Line(217,345,431,292));
-    drawableObjects.push_back(new Line(104,346,323,292));
+//    drawableObjects.push_back(new Line(162,235,104,346));
+//    drawableObjects.push_back(new Line(162,235,217,346));
+//    
+//    drawableObjects.push_back(new Line(104,346,217,346));
+//    //drawableObjects.push_back(new Line(162,235,371,187)); // remove this
+//    
+//    drawableObjects.push_back(new Line(371,187,323,292));
+//    drawableObjects.push_back(new Line(323,292,431,292));
+//    drawableObjects.push_back(new Line(371,187,431,292));
+//    drawableObjects.push_back(new Line(217,345,431,292));
+//    drawableObjects.push_back(new Line(104,346,323,292));
     
 }
 

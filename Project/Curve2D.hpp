@@ -15,7 +15,7 @@
 #include "Point2D.hpp"
 
 using namespace std;
-
+class Line;
 
 class Curve2D : public DrawableObject{
 private:
@@ -31,7 +31,7 @@ public:
     float getLength();
     Point2D getCurveStartPoint();
     Point2D getCurveEndPoint();
-    vector<Point2D> getSamplePoints();
+    vector<Point2D> getSamplePoints(Line *proxyLine);
 };
 
 

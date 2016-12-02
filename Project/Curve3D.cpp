@@ -32,16 +32,67 @@ void Curve3D::warpCurve(int minX , int minY , int minZ , double rangeX , double 
     _warpedEndpoint2.z = ((_endPoint2.z - minZ) / rangeZ) * 5;
 }
 
+Point getPoint(vector<Point> controlPoints , int index){
+    if(index < 0){
+        return controlPoints[0];
+    }
+    
+    if(index >= controlPoints.size()){
+        return controlPoints[controlPoints.size() - 1];
+    }
+    
+    return controlPoints[index];
+}
+
 void Curve3D::draw(){
     glPointSize(4);
     glLineWidth(4);
     glColor3f(1, 0, 1);
-    glBegin(GL_LINE_STRIP);
-    glVertex3d(_warpedEndpoint1.x, _warpedEndpoint1.y, _warpedEndpoint1.z);
+    vector<Point> controlPoints;
+    
+    controlPoints.push_back(_warpedEndpoint1);
     for(Point point:warpedPoints){
-        glVertex3d(point.x, point.y, point.z);
+        controlPoints.push_back(point);
     }
-    glVertex3d(_warpedEndpoint2.x, _warpedEndpoint2.y, _warpedEndpoint2.z);
+    controlPoints.push_back(_warpedEndpoint2);
+    
+    // begin drawing our curve
+    glBegin(GL_LINE_STRIP);
+    
+    // now we have our control points
+    // we will run loop from -3 to make the curve clamped
+    for(int k = -3,j=0; j<=controlPoints.size(); ++j,++k){
+        Point p1 = getPoint(controlPoints, k);
+        Point p2 = getPoint(controlPoints, k+1);
+        Point p3 = getPoint(controlPoints, k+2);
+        Point p4 = getPoint(controlPoints, k+3);
+        
+        // each curve will be linear combination of these 4 points
+        // the weights will be decided by the basis functions
+        int LOD = 30;
+        for(int i = 0 ; i < LOD ; i++){
+            //each curve segment will be created by 20 line segments
+            // use the parametric time value 0 to 1 for this curve
+            // segment.
+            float t = (float)i/LOD;
+            
+            // the t value inverted
+            float it = 1.0f-t;
+            
+            // calculate weights using the blending functions
+            float b0 = it*it*it/6.0f;
+            float b1 = (3*t*t*t - 6*t*t +4)/6.0f;
+            float b2 = (-3*t*t*t +3*t*t + 3*t + 1)/6.0f;
+            float b3 =  t*t*t/6.0f;
+            
+            float x = b0 * p1.x + b1 * p2.x + b2 * p3.x + b3 * p4.x;
+            float y = b0 * p1.y + b1 * p2.y + b2 * p3.y + b3 * p4.y;
+            float z = b0 * p1.z + b1 * p2.z + b2 * p3.z + b3 * p4.z;
+            
+            // specify the point
+            glVertex3f( x,y,z );
+        }
+    }
     glEnd();
     glLineWidth(1);
 }

@@ -69,6 +69,8 @@ public:
     void detectFaces();
     
     void reconstructCurves();
+    
+    void constructFaces();
 };
 
 
