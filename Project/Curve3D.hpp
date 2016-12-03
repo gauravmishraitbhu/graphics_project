@@ -36,6 +36,8 @@ public:
     void draw();
     
     void addEndpoints(Point point1 , Point point2);
+    
+    vector<Point> get4ControlPoints();
 };
 
 #endif /* Curve3D_hpp */

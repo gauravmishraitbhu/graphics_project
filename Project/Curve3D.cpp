@@ -117,3 +117,17 @@ void Curve3D::addEndpoints(Point point1 , Point point2){
     }
     
 }
+
+vector<Point> Curve3D::get4ControlPoints(){
+    vector<Point> result;
+    result.push_back(_endPoint1);
+    int numPointsInCurve = (int)pointsIn3D.size();
+    
+    int point2Index = numPointsInCurve/3;
+    int point3Index = 2*numPointsInCurve/3;
+    
+    result.push_back(pointsIn3D[point2Index]);
+    result.push_back(pointsIn3D[point3Index]);
+    result.push_back(_endPoint2);
+    return result;
+}

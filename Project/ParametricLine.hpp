@@ -11,11 +11,12 @@
 
 #include <stdio.h>
 #include "Point.h"
+#include "ParametricObject.h"
 
 /**
  line will be represented as v1 + s*diff where s is a param between 0 and 1
  */
-class ParametricLine{
+class ParametricLine:public ParametricObject{
     
 private:
     Point _endPoint1{0,0,0};
@@ -36,5 +37,10 @@ public:
         
         return result;
     }
+    
+    int getType(){
+        return 1;
+    }
+
 };
 #endif /* ParametricLine_hpp */

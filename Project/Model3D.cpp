@@ -18,11 +18,15 @@
 #include "Point.h"
 #include "Curve2D.hpp"
 #include "Curve3D.hpp"
+#include "ParametricCurve.hpp"
+#include "ParametricLine.hpp"
+#include "ParametricObject.h"
+#include "CoonsPatch.hpp"
 
 using namespace Eigen;
 
 #define PI 3.14159265
-vector<Point> warpModel(vector<Point3D> vertices3D);
+
 
 
 class Plane {
@@ -728,7 +732,7 @@ void Model3D::optimizeOnAngleCost(MatrixXf pNull , int numParallelClasses){
     optimizeOnTotalCostGivenSVector(pNull, numParallelClasses, sVector);
 }
 
-vector<Point> warpModel(vector<Point3D> vertices3D , vector<Curve3D*> curves){
+vector<Point> warpModel(vector<Point3D> vertices3D , vector<Curve3D*> curves , vector<CoonsPatch*> faces){
     int maxX = INT_MIN;
     int maxY = INT_MIN;
     int maxZ = INT_MIN;
@@ -796,6 +800,11 @@ vector<Point> warpModel(vector<Point3D> vertices3D , vector<Curve3D*> curves){
     for(Curve3D * curve : curves){
         curve->warpCurve(minX, minY, minZ, rangeX, rangeY, rangeZ);
     }
+    
+    for (CoonsPatch * face : faces){
+        face->warp(minX, minY, minZ, rangeX, rangeY, rangeZ);
+    }
+    
     return tranformed;
 }
 
@@ -942,11 +951,11 @@ Curve3D* Model3D::reconstructSingleCurve(Line *line){
     return curve3D;
 }
 
-void Model3D::draw(){
+void Model3D::draw(bool drawFaces){
     
     Point3D firstVertex{0,0,0};
     
-    _transformedVertices = warpModel(vertices3D , _reconstructedCurves);
+    _transformedVertices = warpModel(vertices3D , _reconstructedCurves , _faces);
     vector<Point> tranformed = _transformedVertices;
     glLineWidth(3);
     glColor3f(1, 0, 0);
@@ -959,32 +968,42 @@ void Model3D::draw(){
         
     }
     
-    glColor3f(0, 1, 0);
-    glBegin(GL_LINES);
-    
-    
-    for(Line * line : sketchLines){
+    if(!drawFaces){
         
-        if(line -> isProxy()){
-//            proxyLines.push_back(line);
-            continue;
+        glColor3f(0, 1, 0);
+        glBegin(GL_LINES);
+        
+        
+        for(Line * line : sketchLines){
+            
+            if(line -> isProxy()){
+                //            proxyLines.push_back(line);
+                continue;
+            }
+            int vertex1Id = line->getVertex1Id();
+            int vertex2Id = line->getVertex2Id();
+            
+            Point vertex1 = tranformed[vertex1Id-1];
+            Point vertex2 = tranformed[vertex2Id-1];
+            
+            glVertex3f( vertex1.x, vertex1.y, vertex1.z);
+            glVertex3f( vertex2.x, vertex2.y, vertex2.z);
         }
-        int vertex1Id = line->getVertex1Id();
-        int vertex2Id = line->getVertex2Id();
         
-        Point vertex1 = tranformed[vertex1Id-1];
-        Point vertex2 = tranformed[vertex2Id-1];
+        glEnd();
+        glLineWidth(1);
         
-        glVertex3f( vertex1.x, vertex1.y, vertex1.z);
-        glVertex3f( vertex2.x, vertex2.y, vertex2.z);
+        for (Curve3D* curve : _reconstructedCurves){
+            curve->draw();
+        }
+
+    }else{
+        for (CoonsPatch * face : _faces){
+            face->draw();
+        }
     }
     
-    glEnd();
-    glLineWidth(1);
     
-    for (Curve3D* curve : _reconstructedCurves){
-        curve->draw();
-    }
 }
 
 
@@ -1053,19 +1072,97 @@ void Model3D::detectFaces(){
     
 }
 
-void Model3D::constructFaces(){
-    // 1-4 6-5 - u curves   1-6 4-5 - v lines
+CoonsPatch * Model3D::constructFace(int line1V1 , int line1V2 , int line2V1 , int line2V2 , int line3V1 , int line3V2,
+                                    int line4V1 , int line4V2){
+    ParametricObject *c0 = NULL;
+    ParametricObject *c1 = NULL;
     
-    // find the proxy line which represents 1,4 curve
-    for(Line *line : sketchLines){
-        if(line->isProxy() && line->getVertex1Id() == 1 && line->getVertex2Id() == 4){
-            cout << "found 1 curve\n";
-            Curve3D * curve1 = line->getReconstructedCurve();
+    ParametricObject *d0 = NULL;
+    ParametricObject *d1 = NULL;
+    
+    for (Line *line : sketchLines){
+        
+        //make c0
+        if(line->getVertex1Id() == line1V1 && line->getVertex2Id() == line1V2){
+            // now check if line is proxy or simple
+            if(line->isProxy()){
+                Curve3D *curve1 = line->getReconstructedCurve();
+                vector<Point> controlPoints = curve1->get4ControlPoints();
+                c0 = new ParametricCurve(controlPoints[0] , controlPoints[1] , controlPoints[2] , controlPoints[3]);
+            }else{
+                Point3D vertex1 = vertices3D[line1V1 - 1];
+                Point vertex2 = vertices3D[line1V2 - 1];
+                c0 = new ParametricLine(Point{vertex1} , Point{vertex2});
+            }
+            
         }
         
-        if(line->isProxy() && line->getVertex1Id() == 6 && line->getVertex2Id() == 5){
-            cout << "fiudn 2 curve\n";
+        //make c1
+        if(line->getVertex1Id() == line2V1 && line->getVertex2Id() == line2V2){
+            if(line->isProxy()){
+                Curve3D *curve1 = line->getReconstructedCurve();
+                vector<Point> controlPoints = curve1->get4ControlPoints();
+                c1 = new ParametricCurve(controlPoints[0] , controlPoints[1] , controlPoints[2] , controlPoints[3]);
+            }else{
+                Point3D vertex1 = vertices3D[line2V1 - 1];
+                Point vertex2 = vertices3D[line2V2 - 1];
+                c1 = new ParametricLine(Point{vertex1} , Point{vertex2});
+            }
+        }
+        
+        //make d0
+        if(line->getVertex1Id() == line3V1 && line->getVertex2Id() == line3V2){
+            if(line->isProxy()){
+                Curve3D *curve1 = line->getReconstructedCurve();
+                vector<Point> controlPoints = curve1->get4ControlPoints();
+                d0 = new ParametricCurve(controlPoints[0] , controlPoints[1] , controlPoints[2] , controlPoints[3]);
+            }else{
+                Point3D vertex1 = vertices3D[line3V1 - 1];
+                Point vertex2 = vertices3D[line3V2 - 1];
+                d0 = new ParametricLine(Point{vertex1} , Point{vertex2});
+            }
+        }
+        
+        //make d1
+        if(line->getVertex1Id() == line4V1 && line->getVertex2Id() == line4V2){
+            if(line->isProxy()){
+                Curve3D *curve1 = line->getReconstructedCurve();
+                vector<Point> controlPoints = curve1->get4ControlPoints();
+                d1 = new ParametricCurve(controlPoints[0] , controlPoints[1] , controlPoints[2] , controlPoints[3]);
+            }else{
+                Point3D vertex1 = vertices3D[line4V1 - 1];
+                Point vertex2 = vertices3D[line4V2 - 1];
+                d1 = new ParametricLine(Point{vertex1} , Point{vertex2});
+            }
         }
     }
     
+    if(c0 == NULL || c1 == NULL || d0 == NULL || d1 == NULL){
+        cout << "couldnt find a curve"<<endl;
+    }
+    
+    CoonsPatch *face = new CoonsPatch(c0,c1 , d0 , d1);
+    face->generateSurfacePoints();
+    return face;
+}
+
+void Model3D::constructFaces(){
+    // 1-4 6-5 - u curves   1-6 4-5 - v lines
+    CoonsPatch *face1 = constructFace(1, 4, 6, 5, 1, 6, 4, 5);
+    _faces.push_back(face1);
+    
+    CoonsPatch *face2 = constructFace(1, 4, 2, 3, 1, 2, 4, 3);
+    _faces.push_back(face2);
+    
+    CoonsPatch *face3 = constructFace(6, 5, 8, 7, 6, 8, 5, 7);
+    _faces.push_back(face3);
+    
+    CoonsPatch *face4 = constructFace(1, 6, 2, 8, 1, 2, 6, 8);
+    _faces.push_back(face4);
+    
+    CoonsPatch *face5 = constructFace(5, 7, 4, 3, 4, 5, 3, 7);
+    _faces.push_back(face5);
+    
+    CoonsPatch *face6 = constructFace(8, 7, 2, 3, 3, 7, 2, 8);
+    _faces.push_back(face6);
 }

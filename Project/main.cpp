@@ -28,6 +28,7 @@ const int UI_MODE_LINE = 0;
 const int UI_MODE_FREEHAND = 1;
 const int UI_3D_RENDER = 2;
 
+const bool DRAW_FACES = true;
 
 struct ViewTransform{
     float xRotation = 0;
@@ -99,7 +100,7 @@ void drawTest3Dmodel();
 
 void draw3Dmodel(){
 //    gluOrtho2D (0.0, 640, 0.0, 480 );
-    model3d->draw();
+    model3d->draw(DRAW_FACES);
 //    drawTest3Dmodel();
     
 }
@@ -176,32 +177,38 @@ void draw3D()
     glTranslatef(viewTransform.tx,viewTransform.ty,0);
     glRotatef(viewTransform.xRotation,1,0,0);
     glRotatef(viewTransform.yRotation,0,1,0);
-    glColor4f(0, 0, 0 ,0.2);
-    glLineWidth(0.5);
-    glBegin(GL_LINES);
-    for(int i=-10;i<=10;++i) {
-        
-        int length = 20;
-        
-        if(i == 0){
-            length = 0;
+    
+    
+   
+    if(!DRAW_FACES){
+        glColor4f(0, 0, 0 ,0.2);
+        glLineWidth(0.5);
+        glBegin(GL_LINES);
+        for(int i=-10;i<=10;++i) {
+            
+            int length = 20;
+            
+            if(i == 0){
+                length = 0;
+            }
+            // x z plane
+            glVertex3f(2*i,0,-1 * length);
+            glVertex3f(2*i,0,length);
+            
+            glVertex3f(length,0,2*i);
+            glVertex3f(-1 * length,0,2*i);
+            
+            // x y plane
+            glVertex3f(length,2*i,0);
+            glVertex3f(-1 * length,2*i,0);
+            
+            glVertex3f(2*i,length,0);
+            glVertex3f(2*i,-1 * length,0);
+            
         }
-        // x z plane
-        glVertex3f(2*i,0,-1 * length);
-        glVertex3f(2*i,0,length);
-        
-        glVertex3f(length,0,2*i);
-        glVertex3f(-1 * length,0,2*i);
-        
-        // x y plane
-        glVertex3f(length,2*i,0);
-        glVertex3f(-1 * length,2*i,0);
-        
-        glVertex3f(2*i,length,0);
-        glVertex3f(2*i,-1 * length,0);
-        
+        glEnd();
+
     }
-    glEnd();
     
     glColor3f(1, 0, 0);
     glLineWidth(2);
