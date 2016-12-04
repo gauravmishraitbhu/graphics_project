@@ -29,6 +29,7 @@ const int UI_MODE_FREEHAND = 1;
 const int UI_3D_RENDER = 2;
 
 const bool DRAW_FACES = true;
+int FIGURE_NUM = 1;
 
 struct ViewTransform{
     float xRotation = 0;
@@ -84,6 +85,9 @@ struct Camera{
     int eyeZ;
 };
 
+void drawTest3Dmodel();
+void addStartSketch();
+
 struct Camera cameraController{0,1,5};
 
 /* initialize opengl */
@@ -96,7 +100,7 @@ void init()
     
 }
 
-void drawTest3Dmodel();
+
 
 void draw3Dmodel(){
 //    gluOrtho2D (0.0, 640, 0.0, 480 );
@@ -106,9 +110,42 @@ void draw3Dmodel(){
 }
 
 void initGLFor3D() {
+    
+    GLfloat light_ambient[] = { 1.0, 1.0, 1.0, 1.0 };
+    GLfloat light_diffuse[] = { 1.0, 1.0, 1.0, 1.0 };
+    GLfloat light_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+    GLfloat light_position[] = { 1.0, 1.0, 1.0, 0.0 };
+    
+    glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+//    glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+//    glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
+    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
     glEnable(GL_LIGHT0);
-    float vAmbientLightBright[4] = {0.5f, 0.5f, 0.5f, 1.0f};
-    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, vAmbientLightBright);
+    
+    GLfloat light1_ambient[] = { 1, 1.0, 1.0, 1.0 };
+    GLfloat light1_diffuse[] = { 1.0, 1.0, 1.0, 1.0 };
+    GLfloat light1_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+    GLfloat light1_position[] = { -1.0, -1.0, -1.0, 0 };
+    GLfloat spot_direction[] = { -1.0, -1.0, 0.0 };
+    
+    glLightfv(GL_LIGHT1, GL_AMBIENT, light1_ambient);
+//    glLightfv(GL_LIGHT1, GL_DIFFUSE, light1_diffuse);
+//    glLightfv(GL_LIGHT1, GL_SPECULAR, light1_specular);
+    glLightfv(GL_LIGHT1, GL_POSITION, light1_position);
+//    glLightf(GL_LIGHT1, GL_CONSTANT_ATTENUATION, 1.5);
+//    glLightf(GL_LIGHT1, GL_LINEAR_ATTENUATION, 0.5);
+//    glLightf(GL_LIGHT1, GL_QUADRATIC_ATTENUATION, 0.2);
+    
+//    glLightf(GL_LIGHT1, GL_SPOT_CUTOFF, 45.0);
+//    glLightfv(GL_LIGHT1, GL_SPOT_DIRECTION, spot_direction);
+//    glLightf(GL_LIGHT1, GL_SPOT_EXPONENT, 2.0);
+    
+//    glEnable(GL_LIGHT1);
+    
+//    float vAmbientLightBright[4] = {0.5f, 0.5f, 0.5f, 1.0f};
+//    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, vAmbientLightBright);
+    
+    
 
     glColorMaterial ( GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE );
     glEnable ( GL_COLOR_MATERIAL );
@@ -536,7 +573,7 @@ void runOptmimationAlgorithm(){
     MatrixXf pNull = matrix->getPNullMatrix();
     model3d->optimizeOnAngleCost(pNull , numParallelClasses);
     model3d->reconstructCurves();
-    model3d->constructFaces();
+    model3d->constructFaces(FIGURE_NUM);
 //    model3d->optimizeOnTotalCost(pNull, numParallelClasses);
 }
 
@@ -548,6 +585,16 @@ void render3dModel(){
     glutPostRedisplay();
 }
 
+void changeFigure(){
+    eraseAll();
+    FIGURE_NUM = FIGURE_NUM + 1;
+    if(FIGURE_NUM > 3){
+        FIGURE_NUM = 1;
+    }
+    addStartSketch();
+    glutPostRedisplay();
+}
+
 void initButtons(){
     int x = 10;
     int width = 90;
@@ -556,9 +603,13 @@ void initButtons(){
     int padding = 12;
     
     
-    Button *removeAllBtn = new Button("Erase All" , x,y,width,height);
-    buttons.push_back(removeAllBtn);
-    removeAllBtn->addClickCallback(eraseAll);
+//    Button *removeAllBtn = new Button("Erase All" , x,y,width,height);
+//    buttons.push_back(removeAllBtn);
+//    removeAllBtn->addClickCallback(eraseAll);
+    
+    Button *changeBtn = new Button("Change" , x , y ,width , height);
+    buttons.push_back(changeBtn);
+    changeBtn->addClickCallback(changeFigure);
     
     x += width + padding;
 
@@ -814,33 +865,55 @@ void mousePassiveMotion(int x , int y){
 }
 
 void addStartSketch(){
-    drawableObjects.push_back(new Line(147,166,147,320));
-    drawableObjects.push_back(new Line(147,320,309,320));
-    drawableObjects.push_back(new Line(310,167,309,320));
-    //drawableObjects.push_back(new Line(147,166,310,167)); //remove this
-    drawableObjects.push_back(new Line(310,167,365,120));
-    drawableObjects.push_back(new Line(147,166,209,112));
-    //drawableObjects.push_back(new Line(209,112,365,120)); // remove this
-    drawableObjects.push_back(new Line(365,120,362,261));
-    drawableObjects.push_back(new Line(362,261,309,320));
-    drawableObjects.push_back(new Line(201,259,147,320));
-    drawableObjects.push_back(new Line(209,112,201,259));
-    drawableObjects.push_back(new Line(201,259,362,261));
+    drawableObjects.clear();
+    int constant = 30;
+    switch (FIGURE_NUM) {
+        case 1:
+            drawableObjects.push_back(new Line(147+constant,166+constant,147+constant,320+constant));
+            drawableObjects.push_back(new Line(147+constant,320+constant,309+constant,320+constant));
+            drawableObjects.push_back(new Line(310+constant,167+constant,309+constant,320+constant));
+            //    drawableObjects.push_back(new Line(147+constant,166+constant,310+constant,167+constant)); //remove this
+            drawableObjects.push_back(new Line(310+constant,167+constant,365+constant,120+constant));
+            drawableObjects.push_back(new Line(147+constant,166+constant,209+constant,112+constant));
+            //    drawableObjects.push_back(new Line(209+constant,112+constant,365+constant,120+constant)); // remove this
+            drawableObjects.push_back(new Line(365+constant,120+constant,362+constant,261+constant));
+            drawableObjects.push_back(new Line(362+constant,261+constant,309+constant,320+constant));
+            drawableObjects.push_back(new Line(201+constant,259+constant,147+constant,320+constant));
+            drawableObjects.push_back(new Line(209+constant,112+constant,201+constant,259+constant));
+            drawableObjects.push_back(new Line(201+constant,259+constant,362+constant,261+constant));
+            break;
+            case 2:
+            drawableObjects.push_back(new Line(147+constant,166+constant,147+constant,320+constant));
+//            drawableObjects.push_back(new Line(147+constant,320+constant,309+constant,320+constant));
+            drawableObjects.push_back(new Line(310+constant,167+constant,309+constant,320+constant));
+            //    drawableObjects.push_back(new Line(147+constant,166+constant,310+constant,167+constant)); //remove this
+            drawableObjects.push_back(new Line(310+constant,167+constant,365+constant,120+constant));
+            drawableObjects.push_back(new Line(147+constant,166+constant,209+constant,112+constant));
+            //    drawableObjects.push_back(new Line(209+constant,112+constant,365+constant,120+constant)); // remove this
+            drawableObjects.push_back(new Line(365+constant,120+constant,362+constant,261+constant));
+            drawableObjects.push_back(new Line(362+constant,261+constant,309+constant,320+constant));
+            drawableObjects.push_back(new Line(201+constant,259+constant,147+constant,320+constant));
+            drawableObjects.push_back(new Line(209+constant,112+constant,201+constant,259+constant));
+            drawableObjects.push_back(new Line(201+constant,259+constant,362+constant,261+constant));
+            break;
+        case 3:
+            drawableObjects.push_back(new Line(162,235,104,346));
+            drawableObjects.push_back(new Line(162,235,217,346));
+            
+            drawableObjects.push_back(new Line(104,346,217,346));
+            //drawableObjects.push_back(new Line(162,235,371,187)); // remove this
+            
+            drawableObjects.push_back(new Line(371,187,323,292));
+            drawableObjects.push_back(new Line(323,292,431,292));
+            drawableObjects.push_back(new Line(371,187,431,292));
+            drawableObjects.push_back(new Line(217,345,431,292));
+            drawableObjects.push_back(new Line(104,346,323,292));
+            break;
+
+        default:
+            break;
+    }
     
-    
-    
-    // prism
-//    drawableObjects.push_back(new Line(162,235,104,346));
-//    drawableObjects.push_back(new Line(162,235,217,346));
-//    
-//    drawableObjects.push_back(new Line(104,346,217,346));
-//    //drawableObjects.push_back(new Line(162,235,371,187)); // remove this
-//    
-//    drawableObjects.push_back(new Line(371,187,323,292));
-//    drawableObjects.push_back(new Line(323,292,431,292));
-//    drawableObjects.push_back(new Line(371,187,431,292));
-//    drawableObjects.push_back(new Line(217,345,431,292));
-//    drawableObjects.push_back(new Line(104,346,323,292));
     
 }
 

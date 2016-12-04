@@ -15,10 +15,11 @@
 #include <vector>
 #include <math.h>
 #include <iostream>
+#include "Face.h"
 #include <GLUT/GLUT.h>
 using namespace std;
 
-class CoonsPatch{
+class CoonsPatch:public Face{
 private:
     ParametricObject * _c0;
     ParametricObject * _c1;

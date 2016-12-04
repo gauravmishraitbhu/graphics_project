@@ -26,6 +26,7 @@ class Point3D;
 class Point;
 class Curve3D;
 class CoonsPatch;
+class Face;
 
 class Model3D{
     
@@ -51,7 +52,7 @@ private:
     Curve3D* reconstructSingleCurve(Line *line);
     CoonsPatch * constructFace(int line1V1 , int line1V2 , int line2V1 , int line2V2 , int line3V1 , int line3V2,
                                int line4V1 , int line4V2);
-    vector<CoonsPatch *> _faces;
+    vector<Face *> _faces;
     
 public:
     Model3D(vector<Line *> lines , vector<Point2D> vertices);
@@ -74,7 +75,7 @@ public:
     
     void reconstructCurves();
     
-    void constructFaces();
+    void constructFaces(int FIGURE_NUM);
 };
 
 

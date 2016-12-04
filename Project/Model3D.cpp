@@ -22,6 +22,9 @@
 #include "ParametricLine.hpp"
 #include "ParametricObject.h"
 #include "CoonsPatch.hpp"
+#include "Face.h"
+#include "QuadFace.hpp"
+
 
 using namespace Eigen;
 
@@ -732,7 +735,7 @@ void Model3D::optimizeOnAngleCost(MatrixXf pNull , int numParallelClasses){
     optimizeOnTotalCostGivenSVector(pNull, numParallelClasses, sVector);
 }
 
-vector<Point> warpModel(vector<Point3D> vertices3D , vector<Curve3D*> curves , vector<CoonsPatch*> faces){
+vector<Point> warpModel(vector<Point3D> vertices3D , vector<Curve3D*> curves , vector<Face*> faces){
     int maxX = INT_MIN;
     int maxY = INT_MIN;
     int maxZ = INT_MIN;
@@ -801,7 +804,7 @@ vector<Point> warpModel(vector<Point3D> vertices3D , vector<Curve3D*> curves , v
         curve->warpCurve(minX, minY, minZ, rangeX, rangeY, rangeZ);
     }
     
-    for (CoonsPatch * face : faces){
+    for (Face * face : faces){
         face->warp(minX, minY, minZ, rangeX, rangeY, rangeZ);
     }
     
@@ -998,7 +1001,7 @@ void Model3D::draw(bool drawFaces){
         }
 
     }else{
-        for (CoonsPatch * face : _faces){
+        for (Face * face : _faces){
             face->draw();
         }
     }
@@ -1097,6 +1100,8 @@ CoonsPatch * Model3D::constructFace(int line1V1 , int line1V2 , int line2V1 , in
             
         }
         
+        
+        
         //make c1
         if(line->getVertex1Id() == line2V1 && line->getVertex2Id() == line2V2){
             if(line->isProxy()){
@@ -1146,23 +1151,79 @@ CoonsPatch * Model3D::constructFace(int line1V1 , int line1V2 , int line2V1 , in
     return face;
 }
 
-void Model3D::constructFaces(){
-    // 1-4 6-5 - u curves   1-6 4-5 - v lines
-    CoonsPatch *face1 = constructFace(1, 4, 6, 5, 1, 6, 4, 5);
-    _faces.push_back(face1);
+QuadFace * getQuadface(int v1 , int v2 , int v3 , int v4,vector<Point3D> vertices3D){
+    Point3D v3D1 = vertices3D[v1-1];
+    Point3D v3D2 = vertices3D[v2-1];
+    Point3D v3D3 = vertices3D[v3-1];
+    Point3D v3D4 = vertices3D[v4-1];
     
-    CoonsPatch *face2 = constructFace(1, 4, 2, 3, 1, 2, 4, 3);
-    _faces.push_back(face2);
+    Point vertex1(v3D1);
+    Point vertex2(v3D2);
+    Point vertex3(v3D3);
+    Point vertex4(v3D4);
     
-    CoonsPatch *face3 = constructFace(6, 5, 8, 7, 6, 8, 5, 7);
-    _faces.push_back(face3);
+    QuadFace *face = new QuadFace(vertex1 , vertex2 , vertex3 , vertex4);
+    return face;
+}
+
+void Model3D::constructFaces(int FIGURE_NUM){
     
-    CoonsPatch *face4 = constructFace(1, 6, 2, 8, 1, 2, 6, 8);
-    _faces.push_back(face4);
+    if(FIGURE_NUM == 1){
+        // 1-4 6-5 - u curves   1-6 4-5 - v lines
+        CoonsPatch *face1 = constructFace(1, 4, 6, 5, 1, 6, 4, 5);
+        _faces.push_back(face1);
+        
+        CoonsPatch *face2 = constructFace(1, 4, 2, 3, 1, 2, 4, 3);
+        _faces.push_back(face2);
+        
+        CoonsPatch *face3 = constructFace(6, 5, 8, 7, 6, 8, 5, 7);
+        _faces.push_back(face3);
+        
+        CoonsPatch *face4 = constructFace(1, 6, 2, 8, 1, 2, 6, 8);
+        _faces.push_back(face4);
+        
+        CoonsPatch *face5 = constructFace(5, 7, 4, 3, 4, 5, 3, 7);
+        _faces.push_back(face5);
+        
+        CoonsPatch *face6 = constructFace(8, 7, 2, 3, 3, 7, 2, 8);
+        _faces.push_back(face6);
+    }else if (FIGURE_NUM == 2){
+        
+        CoonsPatch *face1 = constructFace(1, 2, 3, 4, 1, 3, 2, 4);
+        _faces.push_back(face1);
+        
+        CoonsPatch *face2 = constructFace(3, 5, 4, 7, 3, 4, 5, 7);
+        _faces.push_back(face2);
+        
+        CoonsPatch *face3 = constructFace(1, 6, 3, 5, 1, 3, 6, 5);
+        _faces.push_back(face3);
+        
+        CoonsPatch *face4 = constructFace(1, 2, 6, 8, 1, 6, 2, 8);
+        _faces.push_back(face4);
+        
+        CoonsPatch *face5 = constructFace(2, 8, 4, 7, 2, 4, 8, 7);
+        _faces.push_back(face5);
+        
+        CoonsPatch *face6 = constructFace(6, 8, 5, 7, 6, 5, 8, 7);
+        _faces.push_back(face6);
+    }else if(FIGURE_NUM == 3){
+        CoonsPatch *face1 = constructFace(1, 4 , 3, 6, 1, 3, 4, 6);
+        _faces.push_back(face1);
+        
     
-    CoonsPatch *face5 = constructFace(5, 7, 4, 3, 4, 5, 3, 7);
-    _faces.push_back(face5);
     
-    CoonsPatch *face6 = constructFace(8, 7, 2, 3, 3, 7, 2, 8);
-    _faces.push_back(face6);
+        QuadFace *face2 = getQuadface(1, 2, 3, 1 , vertices3D);
+        _faces.push_back(face2);
+        
+        QuadFace *face3 = getQuadface(4, 5, 6, 4 , vertices3D);
+        _faces.push_back(face3);
+        
+        CoonsPatch *face4 = constructFace(1, 2 , 4, 5, 1, 4, 2, 5);
+        _faces.push_back(face4);
+        
+        CoonsPatch *face5 = constructFace(2, 3 , 5, 6, 2, 5, 3, 6);
+        _faces.push_back(face5);
+        
+    }
+    
 }
